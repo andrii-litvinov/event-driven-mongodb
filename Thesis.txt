@@ -12,13 +12,6 @@ Who Am I And Why I Am Giving This Talk
     At some point it became obvious that we cannot perform massive computations with different complex domain rules involved on every request from client apps because we wanted our APIs to be performant and responsive. For certain workloads it made much more sense to execute some logic asynchronously as a reaction to the state change in a system. For example recalculate baseball game statistics on every game event that is logged by our game loggers. Also our database engine is MongoDB which had no support for ACID transactions, which mean if we persisted an update for one entity and error happened before we persisted an update to another one involved in the process there was a risk to leave a system in an inconsistent state.
     We decided to go for Event-Driven approach when every state modification raises an event that other subsystems can react on it and do what they want to do with that knowledge.
     We build such system and run it it production for almost a year, so it is proven to be reliable and efficient under our workloads and I want to share some of the challenges and considerations we've been facing during the implementation and running the system in production.
-
-    
-
-
-
-
-
     
 
 What Is The Event-Driven Architecture All About
