@@ -69,9 +69,6 @@ Slide for using Kafka and reasons when to use it.
 
 Demo of .NET Core 2.1 Generic Host.
 
-
-
-
 function tail() {
     var entry = db.oplog.rs.find().sort({$natural: -1}).limit(1).next();
     var ts = entry.ts;
