@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Domain
 {
     public class EventEnvelope
     {
-        public DomainEvent Event { get; set; }
+        public object Event { get; set; }
         public string EventId { get; set; }
         public string CorrelationId { get; set; }
         public string CausationId { get; set; }
@@ -41,5 +42,16 @@ namespace Domain
             CorrelationId = correlationId,
             CausationId = causationId
         };
+    }
+    
+    public class Trace
+    {
+        public string Id { get; set; }
+
+        [BsonIgnoreIfNull]
+        public string CorrelationId { get; set; }
+
+        [BsonIgnoreIfNull]
+        public string CausationId { get; set; }
     }
 }
