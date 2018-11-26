@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service1", "Service1\Servic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service2", "Service2\Service2.csproj", "{859717DE-01D0-4A01-BFE8-B355FCA2733B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{24BCFDB4-B61B-4E1A-AE98-80CAA88AF187}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{24BCFDB4-B61B-4E1A-AE98-80CAA88AF187}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
