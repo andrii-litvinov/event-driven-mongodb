@@ -13,14 +13,12 @@ using Serilog;
 
 namespace EventPublisher
 {
-    // TODO: Implement simple endpoint to receive POST requests to create new entity. 
-
     public class EventEmitterService : ResilientService
     {
         private readonly IMongoDatabase database;
+        private readonly IMongoCollection<BsonDocument> events;
         private readonly IDictionary<string, string> map;
         private readonly string name;
-        private readonly IMongoCollection<BsonDocument> events;
         private readonly IOperations operations;
         private readonly IResumeTokens tokens;
 
@@ -158,21 +156,27 @@ namespace EventPublisher
                 return false;
             }
 
-            void OnNext(BsonDocument envelope) => observer.OnNext(new BatchItem
+            void OnNext(BsonDocument envelope)
             {
-                Envelope = envelope,
-                Token = new BsonDocument {{"ts", operation["ts"]}, {"h", operation["h"]}},
-                WallClock = (DateTime) operation["wall"]
-            });
+                observer.OnNext(new BatchItem
+                {
+                    Envelope = envelope,
+                    Token = new BsonDocument {{"ts", operation["ts"]}, {"h", operation["h"]}},
+                    WallClock = (DateTime) operation["wall"]
+                });
+            }
         }
 
-        private static EventEnvelope CreateEnvelope(BsonDocument @event, Trace trace) => new EventEnvelope
+        private static EventEnvelope CreateEnvelope(BsonDocument @event, Trace trace)
         {
-            EventId = trace?.Id ?? Guid.NewGuid().ToString(),
-            Event = @event,
-            CorrelationId = trace?.CorrelationId,
-            CausationId = trace?.CausationId,
-        };
+            return new EventEnvelope
+            {
+                EventId = trace?.Id ?? Guid.NewGuid().ToString(),
+                Event = @event,
+                CorrelationId = trace?.CorrelationId,
+                CausationId = trace?.CausationId
+            };
+        }
 
         private static Trace GetTrace(BsonDocument entity)
         {
