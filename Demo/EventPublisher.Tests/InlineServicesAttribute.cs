@@ -11,7 +11,7 @@ namespace EventPublisher.Tests
         {
         }
 
-        private static IFixture CreateFixture()
+        public static IFixture CreateFixture()
         {
             var configuration = Configuration.GetConfiguration();
             var container = Bootstrapper.ConfigureContainer(configuration, LoggerFactory.Create(configuration));
