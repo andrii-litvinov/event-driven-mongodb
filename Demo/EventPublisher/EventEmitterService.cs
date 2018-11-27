@@ -21,6 +21,7 @@ namespace EventPublisher
         private readonly string name;
         private readonly IOperations operations;
         private readonly IResumeTokens tokens;
+        private readonly TaskCompletionSource<object> started = new TaskCompletionSource<object>();
 
         public EventEmitterService(string name, IMongoDatabase database, IOperations operations,
             IResumeTokens tokens, ILogger logger, IDictionary<string, string> map) : base(logger)
@@ -33,10 +34,14 @@ namespace EventPublisher
             events = database.GetCollection<BsonDocument>("events");
         }
 
+        public Task Started => started.Task;
+
         protected override async Task Execute(CancellationToken cancellationToken)
         {
             var resumeToken = await tokens.Get(name, cancellationToken);
             var cursor = await operations.GetCursor(resumeToken, map.Keys, cancellationToken);
+            
+            started.SetResult(null);
 
             await Observable
                 .Create<BatchItem>(observer => cursor.ForEachAsync(
