@@ -53,6 +53,28 @@ namespace EventPublisher.Tests
             @event[PrivateField.SourceId].Should().Be(entityId);
             @event["field.value"].Should().Be(true);
         }
+        
+        [Fact]
+        public async Task EmitUpdatedEventOnReplace()
+        {
+            // Arrange
+            var entityId = fixture.Create<ObjectId>();
+            var entity = new BsonDocument {{"_id", entityId}, {"value", true}, {"_t", "Entity"}};
+            await fixture.Entities.InsertOneAsync(entity);
+
+            // Act
+            entity["value"] = false;
+            await fixture.Entities.ReplaceOneAsync(filter.Eq("_id", entityId), entity);
+
+            // Assert
+            var envelope = await fixture.GetEvent(entityId, "EntityUpdated");
+            envelope.EventId.Should().NotBeNullOrEmpty();
+
+            var @event = envelope.Event;
+            @event["_t"].Should().Be("EntityUpdated");
+            @event[PrivateField.SourceId].Should().Be(entityId);
+            ((BsonDocument)@event["entity"]).Should().Equal(entity);
+        }
 
         [Fact]
         public async Task EmitDeletedEvent()
