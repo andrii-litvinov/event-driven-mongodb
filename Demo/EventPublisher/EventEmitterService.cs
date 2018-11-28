@@ -21,6 +21,7 @@ namespace EventPublisher
         private readonly string name;
         private readonly IOperations operations;
         private readonly IResumeTokens tokens;
+        private readonly ILogger logger;
         private readonly TaskCompletionSource<object> started = new TaskCompletionSource<object>();
 
         public EventEmitterService(string name, IMongoDatabase database, IOperations operations,
@@ -30,6 +31,7 @@ namespace EventPublisher
             this.operations = operations;
             this.database = database;
             this.tokens = tokens;
+            this.logger = logger;
             this.map = map;
             events = database.GetCollection<BsonDocument>("events");
         }
@@ -55,6 +57,7 @@ namespace EventPublisher
         {
             var @namespace = (string) operation["ns"];
             var collectionName = @namespace.Substring(@namespace.IndexOf(".", StringComparison.Ordinal) + 1);
+            var timestamp = (BsonTimestamp) operation["ts"];
 
             switch ((string) operation["op"])
             {
@@ -72,7 +75,7 @@ namespace EventPublisher
                         {PrivateField.SourceId, document["_id"]},
                         {"entity", document}
                     };
-                    OnNext(CreateEnvelope(@event, trace).ToBsonDocument());
+                    OnNext(CreateEnvelope(@event, trace, timestamp).ToBsonDocument());
 
                     break;
                 }
@@ -109,13 +112,13 @@ namespace EventPublisher
                                         @event.Add(PrivateField.SourceId, documentKey["_id"]);
                                         var trace = GetTrace(@event);
 
-                                        OnNext(CreateEnvelope(@event, trace).ToBsonDocument());
+                                        OnNext(CreateEnvelope(@event, trace, timestamp).ToBsonDocument());
                                     }
 
                                     break;
                                 default:
                                     throw new Exception(
-                                        $"Command {command} is not recognized. Timestamp: {operation["ts"]}, hash: {operation["h"]}.");
+                                        $"Command {command} is not recognized. Timestamp: {timestamp}, hash: {operation["h"]}.");
                             }
                     }
                     else
@@ -131,7 +134,7 @@ namespace EventPublisher
                             {"entity", obj}
                         };
 
-                        OnNext(CreateEnvelope(@event, trace).ToBsonDocument());
+                        OnNext(CreateEnvelope(@event, trace, timestamp).ToBsonDocument());
                     }
 
                     break;
@@ -142,12 +145,12 @@ namespace EventPublisher
                     var type = EventTypeFactory.Create(new BsonDocument(), ChangeStreamOperationType.Delete, map[collectionName]);
                     var @event = new BsonDocument {{"_t", type}, {PrivateField.SourceId, documentKey["_id"]}};
 
-                    OnNext(CreateEnvelope(@event, null).ToBsonDocument());
+                    OnNext(CreateEnvelope(@event, null, timestamp).ToBsonDocument());
                     break;
                 }
                 default:
                     throw new Exception(
-                        $"Unsupported operation type {operation["op"]} encountered. Timestamp: {operation["ts"]}, hash: {operation["h"]}");
+                        $"Unsupported operation type {operation["op"]} encountered. Timestamp: {timestamp}, hash: {operation["h"]}");
             }
 
             bool TryEmitEmbeddedDomainEvents(BsonDocument document)
@@ -164,16 +167,17 @@ namespace EventPublisher
             void OnNext(BsonDocument envelope) => observer.OnNext(new BatchItem
             {
                 Envelope = envelope,
-                Token = new BsonDocument {{"ts", operation["ts"]}, {"h", operation["h"]}},
+                Token = new BsonDocument {{"ts", timestamp}, {"h", operation["h"]}},
                 WallClock = (DateTime) operation["wall"]
             });
         }
 
-        private static EventEnvelope CreateEnvelope(BsonDocument @event, Trace trace)
+        private static EventEnvelope CreateEnvelope(BsonDocument @event, Trace trace, BsonTimestamp timestamp)
         {
             return new EventEnvelope
             {
                 EventId = trace?.Id ?? Guid.NewGuid().ToString(),
+                Timestamp = timestamp,
                 Event = @event,
                 CorrelationId = trace?.CorrelationId,
                 CausationId = trace?.CausationId
@@ -203,6 +207,8 @@ namespace EventPublisher
                 resumeToken.Updated = last.WallClock;
 
                 await tokens.Save(resumeToken);
+
+                logger.Information("Published {@count} event(s).", items.Count);
             }
 
             return Unit.Default;

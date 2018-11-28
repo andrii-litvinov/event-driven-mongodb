@@ -4,7 +4,7 @@
     for(;;) {
         var commandResult = db.runCommand({
             find: "oplog.rs",
-            filter: {"ts" : {$gt: ts}, "ns" : {$nin: ["", "demo.resumetokens"]}},
+            filter: {"ts" : {$gt: ts}, "ns" : {$nin: ["", "config.system.sessions", "demo.resumetokens"]}},
             tailable: true,
             awaitData: true,
             oplogReplay: true

@@ -7,6 +7,7 @@ namespace Common
     public class EventEnvelope
     {
         public BsonDocument Event { get; set; }
+        public BsonTimestamp Timestamp { get; set; }
         public string EventId { get; set; }
         public string CorrelationId { get; set; }
         public string CausationId { get; set; }
