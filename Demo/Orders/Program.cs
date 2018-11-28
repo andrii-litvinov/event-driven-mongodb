@@ -49,7 +49,7 @@ namespace Orders
                 container.RegisterInstance(logger);
                 container.Collection.Register<IHostedService>(typeof(Program).Assembly);
                 container.Register(typeof(ICommandHandler<>), typeof(Program).Assembly);
-                container.RegisterDecorator(typeof(ICommandHandler<>), typeof(LoggerDecorator<>));
+                container.RegisterDecorator(typeof(ICommandHandler<>), typeof(LoggerCommandHandlerDecorator<>));
 
                 var mongoUrl = configuration["mongo:url"];
                 var url = new MongoUrl(mongoUrl);

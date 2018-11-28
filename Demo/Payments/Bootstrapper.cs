@@ -1,4 +1,7 @@
-﻿using Common;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Common;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using MongoDB.Driver;
@@ -23,10 +26,19 @@ namespace Payments
             var client = new MongoClient(url);
             var database = client.GetDatabase(url.DatabaseName);
             container.RegisterInstance(database);
+            
+            container.Register(typeof(IEventHandler<>), typeof(Bootstrapper).Assembly);
 
             container.Collection.Append(
                 typeof(IHostedService),
-                Lifestyle.Singleton.CreateRegistration(() => container.GetInstance<EventConsumer>(), container));
+                Lifestyle.Singleton.CreateRegistration(() =>
+                {
+                    var consumer = new EventConsumer("payments", database, new Dictionary<string, Func<DomainEvent, Task>>
+                    {
+                        {nameof(OrderCreated), @event => container.GetInstance<IEventHandler<OrderCreated>>().Handle((OrderCreated) @event)}
+                    }, logger);
+                    return consumer;
+                }, container));
 
             return container;
         }

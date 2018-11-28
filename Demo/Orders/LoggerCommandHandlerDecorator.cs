@@ -5,12 +5,12 @@ using Serilog;
 
 namespace Orders
 {
-    public class LoggerDecorator<TCommand> : ICommandHandler<TCommand>
+    public class LoggerCommandHandlerDecorator<TCommand> : ICommandHandler<TCommand>
     {
         private readonly ICommandHandler<TCommand> decorated;
         private readonly ILogger logger;
 
-        public LoggerDecorator(ICommandHandler<TCommand> decorated, ILogger logger)
+        public LoggerCommandHandlerDecorator(ICommandHandler<TCommand> decorated, ILogger logger)
         {
             this.decorated = decorated;
             this.logger = logger;
