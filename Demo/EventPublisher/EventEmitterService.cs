@@ -40,18 +40,18 @@ namespace EventPublisher
         {
             var resumeToken = await tokens.Get(name, cancellationToken);
             var cursor = await operations.GetCursor(resumeToken, map.Keys, cancellationToken);
-            
+
             started.SetResult(null);
 
             await Observable
                 .Create<BatchItem>(observer => cursor.ForEachAsync(
-                    operation => EmitEvent(observer, operation, resumeToken), cancellationToken))
+                    operation => EmitEvent(observer, operation), cancellationToken))
                 .Buffer(TimeSpan.FromSeconds(1), 1000)
                 .Select(items => SaveEvents(items, resumeToken))
                 .Concat();
         }
 
-        private async Task EmitEvent(IObserver<BatchItem> observer, BsonDocument operation, ResumeToken resumeToken)
+        private async Task EmitEvent(IObserver<BatchItem> observer, BsonDocument operation)
         {
             var @namespace = (string) operation["ns"];
             var collectionName = @namespace.Substring(@namespace.IndexOf(".", StringComparison.Ordinal) + 1);
@@ -161,15 +161,12 @@ namespace EventPublisher
                 return false;
             }
 
-            void OnNext(BsonDocument envelope)
+            void OnNext(BsonDocument envelope) => observer.OnNext(new BatchItem
             {
-                observer.OnNext(new BatchItem
-                {
-                    Envelope = envelope,
-                    Token = new BsonDocument {{"ts", operation["ts"]}, {"h", operation["h"]}},
-                    WallClock = (DateTime) operation["wall"]
-                });
-            }
+                Envelope = envelope,
+                Token = new BsonDocument {{"ts", operation["ts"]}, {"h", operation["h"]}},
+                WallClock = (DateTime) operation["wall"]
+            });
         }
 
         private static EventEnvelope CreateEnvelope(BsonDocument @event, Trace trace)
