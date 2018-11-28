@@ -30,7 +30,7 @@ namespace EventPublisher.Tests
 
         public IResumeTokens Tokens => fixture.Create<IResumeTokens>();
         public IMongoCollection<BsonDocument> Entities => fixture.Create<IMongoDatabase>().GetCollection<BsonDocument>("test.entities");
-        private IMongoCollection<BsonEnvelope> Events => fixture.Create<IMongoDatabase>().GetCollection<BsonEnvelope>("events");
+        private IMongoCollection<EventEnvelope> Events => fixture.Create<IMongoDatabase>().GetCollection<EventEnvelope>("events");
 
         protected override async Task Initialize()
         {
@@ -41,7 +41,7 @@ namespace EventPublisher.Tests
             OnDispose += () => Tokens.RemoveAll("test-event-emitter");
         }
 
-        public async Task<BsonEnvelope> GetEvent(ObjectId entityId, string type) =>
+        public async Task<EventEnvelope> GetEvent(ObjectId entityId, string type) =>
             await Observable
                 .Interval(TimeSpan.FromSeconds(1))
                 .Select(_ => Events.Find(e => e.Event[PrivateField.SourceId] == entityId && e.Event["_t"] == type).FirstOrDefaultAsync())
