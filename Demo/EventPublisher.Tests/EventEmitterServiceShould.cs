@@ -1,9 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AutoFixture;
+using Domain;
+using FluentAssertions;
+using FluentAssertions.Extensions;
 using Microsoft.Extensions.Configuration;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using SimpleInjector;
 using Xunit;
 
@@ -30,6 +36,8 @@ namespace EventPublisher.Tests
             }
 
             public IResumeTokens Tokens => fixture.Create<IResumeTokens>();
+            public IMongoCollection<BsonDocument> Entities => fixture.Create<IMongoDatabase>().GetCollection<BsonDocument>("test.entities");
+            private IMongoCollection<BsonEnvelope> Events => fixture.Create<IMongoDatabase>().GetCollection<BsonEnvelope>("events");
 
             protected override async Task Initialize()
             {
@@ -40,42 +48,43 @@ namespace EventPublisher.Tests
                 OnDispose += () => Tokens.RemoveAll("test-event-emitter");
             }
 
-//            public Task<Event> GetEvent(ObjectId entityId, string type)
-//            {
-//                var tcs = new TaskCompletionSource<Event>();
-//                Observable
-//                    .Interval(TimeSpan.FromSeconds(1))
-//                    .Select(_ => Events.Find(e => e.Body.DocumentKey["_id"] == entityId && e.Type == type).FirstOrDefaultAsync())
-//                    .Concat()
-//                    .Where(e => e != null)
-//                    .Subscribe(e2 => tcs.TrySetResult(e2));
-//
-//                Task.Delay(10.Seconds()).ContinueWith(task => tcs.TrySetException(new TimeoutException()));
-//
-//                return tcs.Task;
-//            }
+            public Task<BsonEnvelope> GetEvent(ObjectId entityId, string type)
+            {
+                var tcs = new TaskCompletionSource<BsonEnvelope>();
+                Observable
+                    .Interval(TimeSpan.FromSeconds(1))
+                    .Select(_ => Events.Find(e => e.Event[PrivateField.SourceId] == entityId && e.Event["_t"] == type)
+                        .FirstOrDefaultAsync())
+                    .Concat()
+                    .Where(e => e != null)
+                    .Subscribe(e => tcs.TrySetResult(e));
 
-//            public Task<List<Event>> GetEvents(ObjectId id, string type)
-//            {
-//                var tcs = new TaskCompletionSource<List<Event>>();
-//                Observable
-//                    .Interval(TimeSpan.FromSeconds(1))
-//                    .Select(_ => Events.Find(e => e.Body.DocumentKey["_id"] == id && e.Type == type).ToListAsync())
-//                    .Concat()
-//                    .Where(events => events.Any())
-//                    .Subscribe(events => tcs.TrySetResult(events));
-//
-//                Task.Delay(10.Seconds()).ContinueWith(task => tcs.TrySetException(new TimeoutException()));
-//
-//                return tcs.Task;
-//            }
+                Task.Delay(10.Seconds()).ContinueWith(task => tcs.TrySetException(new TimeoutException()));
+
+                return tcs.Task;
+            }
 
             public T Create<T>() => fixture.Create<T>();
         }
 
         [Fact]
-        public async Task ShouldEmitCreatedEvent()
+        public async Task EmitCreatedEvent()
         {
+            // Arrange
+            var entityId = fixture.Create<ObjectId>();
+            var entity = new BsonDocument {{"_id", entityId}};
+
+            // Act
+            await fixture.Entities.InsertOneAsync(entity);
+
+            // Assert
+            var envelope = await fixture.GetEvent(entityId, "EntityCreated");
+            envelope.EventId.Should().NotBeNullOrEmpty();
+
+            var @event = envelope.Event;
+            @event["_t"].Should().Be("EntityCreated");
+            @event[PrivateField.SourceId].Should().Be(entityId);
+            ((BsonDocument) @event["entity"]).Should().Equal(entity);
         }
     }
 

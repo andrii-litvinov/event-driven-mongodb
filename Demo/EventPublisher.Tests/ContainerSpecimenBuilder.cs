@@ -5,9 +5,8 @@ using AutoFixture.AutoNSubstitute;
 using AutoFixture.Kernel;
 using MongoDB.Bson;
 using SimpleInjector;
-using SubstituteAttribute = EventPublisher.Tests.SubstituteAttribute;
 
-namespace Synergy.Tests
+namespace EventPublisher.Tests
 {
     internal class ContainerSpecimenBuilder : ISpecimenBuilder
     {

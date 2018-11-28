@@ -9,7 +9,7 @@ namespace EventPublisher
     {
         private readonly IMongoCollection<ResumeToken> tokens;
 
-        public ResumeTokens(IMongoCollection<ResumeToken> tokens) => this.tokens = tokens;
+        public ResumeTokens(IMongoDatabase database) => tokens = tokens = database.GetCollection<ResumeToken>("resumetokens");
 
         public async Task<ResumeToken> Get(string name, CancellationToken cancellationToken = default) =>
             await tokens.Find(t => t.Name == name).FirstOrDefaultAsync(cancellationToken) ??

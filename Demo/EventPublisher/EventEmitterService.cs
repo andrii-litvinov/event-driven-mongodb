@@ -172,9 +172,9 @@ namespace EventPublisher
             }
         }
 
-        private static EventEnvelope CreateEnvelope(BsonDocument @event, Trace trace)
+        private static BsonEnvelope CreateEnvelope(BsonDocument @event, Trace trace)
         {
-            return new EventEnvelope
+            return new BsonEnvelope
             {
                 EventId = trace?.Id ?? Guid.NewGuid().ToString(),
                 Event = @event,
@@ -217,5 +217,13 @@ namespace EventPublisher
             public BsonDocument Token { get; set; }
             public DateTime WallClock { get; set; }
         }
+    }
+    
+    public class BsonEnvelope
+    {
+        public BsonDocument Event { get; set; }
+        public string EventId { get; set; }
+        public string CorrelationId { get; set; }
+        public string CausationId { get; set; }
     }
 }

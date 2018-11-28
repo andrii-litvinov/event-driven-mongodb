@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Domain;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using MongoDB.Driver;
@@ -12,6 +13,8 @@ namespace EventPublisher
     {
         public static Container ConfigureContainer(IConfiguration configuration, ILogger logger)
         {
+            BsonConfig.RegisterConventionPacks();
+
             typeof(CollectionElementNameValidator)
                 .GetField("__instance", BindingFlags.Static | BindingFlags.NonPublic)
                 .SetValue(null, new CollectionElementNameValidator36());
@@ -25,7 +28,8 @@ namespace EventPublisher
             var mongoUrl = configuration["mongo:url"];
             var url = new MongoUrl(mongoUrl);
             var client = new MongoClient(url);
-            container.RegisterInstance(client.GetDatabase(url.DatabaseName));
+            var database = client.GetDatabase(url.DatabaseName);
+            container.RegisterInstance(database);
 
             container.Collection.Append(
                 typeof(IHostedService),

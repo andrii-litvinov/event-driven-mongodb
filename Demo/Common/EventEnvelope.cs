@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Threading;
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson.Serialization.Conventions;
 
 namespace Domain
 {
     public class EventEnvelope
     {
-        public object Event { get; set; }
+        public DomainEvent Event { get; set; }
         public string EventId { get; set; }
         public string CorrelationId { get; set; }
         public string CausationId { get; set; }
@@ -53,5 +54,36 @@ namespace Domain
 
         [BsonIgnoreIfNull]
         public string CausationId { get; set; }
+    }
+    
+    public static class BsonConfig
+    {
+        private static readonly LazyAction Lazy = new LazyAction(() =>
+            ConventionRegistry.Register("conventions", new ConventionPack
+            {
+                new CamelCaseElementNameConvention(),
+                new IgnoreExtraElementsConvention(true)
+            }, type => true));
+
+        public static void RegisterConventionPacks() => Lazy.Invoke();
+    }
+    
+    public class LazyAction : Lazy<object>
+    {
+        public LazyAction(Action action) : base(() => Invoke(action))
+        {
+        }
+
+        public void Invoke()
+        {
+            // ReSharper disable once UnusedVariable
+            var value = Value;
+        }
+
+        private static object Invoke(Action action)
+        {
+            action.Invoke();
+            return null;
+        }
     }
 }

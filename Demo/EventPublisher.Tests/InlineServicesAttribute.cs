@@ -1,7 +1,6 @@
 ﻿using AutoFixture;
 using AutoFixture.Xunit2;
 using MongoDB.Bson;
-using Synergy.Tests;
 
 namespace EventPublisher.Tests
 {
