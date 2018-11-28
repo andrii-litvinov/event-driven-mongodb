@@ -18,7 +18,9 @@ namespace EventPublisher.Tests
     public class EventEmitterServiceShould : IClassFixture<EventEmitterServiceShould.Fixture>
     {
         public EventEmitterServiceShould(Fixture fixture) => this.fixture = fixture;
+        private readonly FilterDefinitionBuilder<BsonDocument> filter = Builders<BsonDocument>.Filter;
         private readonly Fixture fixture;
+        private readonly UpdateDefinitionBuilder<BsonDocument> update = Builders<BsonDocument>.Update;
 
         public class Fixture : Disposable
         {
@@ -85,6 +87,26 @@ namespace EventPublisher.Tests
             @event["_t"].Should().Be("EntityCreated");
             @event[PrivateField.SourceId].Should().Be(entityId);
             ((BsonDocument) @event["entity"]).Should().Equal(entity);
+        }
+
+        [Fact]
+        public async Task EmitUpdatedEvent()
+        {
+            // Arrange
+            var entityId = fixture.Create<ObjectId>();
+            await fixture.Entities.InsertOneAsync(new BsonDocument {{"_id", entityId}, {"value", true}, {"_t", "Entity"}});
+
+            // Act
+            await fixture.Entities.UpdateOneAsync(filter.Eq("_id", entityId), update.Set("field.value", true));
+
+            // Assert
+            var envelope = await fixture.GetEvent(entityId, "EntityUpdated");
+            envelope.EventId.Should().NotBeNullOrEmpty();
+
+            var @event = envelope.Event;
+            @event["_t"].Should().Be("EntityUpdated");
+            @event[PrivateField.SourceId].Should().Be(entityId);
+            @event["field.value"].Should().Be(true);
         }
     }
 
