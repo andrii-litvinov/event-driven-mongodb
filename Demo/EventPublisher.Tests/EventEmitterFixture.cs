@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using AutoFixture;
 using Domain;
@@ -40,27 +41,15 @@ namespace EventPublisher.Tests
             OnDispose += () => Tokens.RemoveAll("test-event-emitter");
         }
 
-        public Task<BsonEnvelope> GetEvent(ObjectId entityId, string type)
-        {
-            var tcs = new TaskCompletionSource<BsonEnvelope>();
-            IDisposable subscription = null;
-            subscription = Observable
+        public async Task<BsonEnvelope> GetEvent(ObjectId entityId, string type) =>
+            await Observable
                 .Interval(TimeSpan.FromSeconds(1))
-                .Select(_ => Events.Find(e => e.Event[PrivateField.SourceId] == entityId && e.Event["_t"] == type)
-                    .FirstOrDefaultAsync())
+                .Select(_ => Events.Find(e => e.Event[PrivateField.SourceId] == entityId && e.Event["_t"] == type).FirstOrDefaultAsync())
                 .Concat()
                 .Where(e => e != null)
-                .Subscribe(e =>
-                {
-                    tcs.TrySetResult(e);
-                    // ReSharper disable once AccessToModifiedClosure
-                    subscription?.Dispose();
-                });
-
-            Task.Delay(10.Seconds()).ContinueWith(task => tcs.TrySetException(new TimeoutException()));
-
-            return tcs.Task;
-        }
+                .FirstAsync()
+                .ToTask()
+                .WithTimeout(10.Seconds());
 
         public T Create<T>() => fixture.Create<T>();
     }
