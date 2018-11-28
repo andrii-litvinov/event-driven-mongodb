@@ -13,9 +13,9 @@ namespace Orders
             {
                 await request.Body.CopyToAsync(stream);
                 stream.Seek(0, SeekOrigin.Begin);
-
+                
                 var serializer = new JsonSerializer();
-                using (var reader = new StreamReader(request.Body))
+                using (var reader = new StreamReader(stream))
                     return (T) serializer.Deserialize(reader, typeof(T));
             }
         }

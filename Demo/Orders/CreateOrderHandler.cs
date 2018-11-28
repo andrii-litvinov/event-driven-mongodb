@@ -2,7 +2,7 @@
 
 namespace Orders
 {
-    public class CreateOrderHandler
+    public class CreateOrderHandler : ICommandHandler<CreateOrder>
     {
         public async Task Handle(CreateOrder command)
         {
