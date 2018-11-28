@@ -69,24 +69,6 @@ Slide for using Kafka and reasons when to use it.
 
 Demo of .NET Core 2.1 Generic Host.
 
-function tail() {
-    var entry = db.oplog.rs.find().sort({$natural: -1}).limit(1).next();
-    var ts = entry.ts;
-    for(;;) {
-        var commandResult = db.runCommand({
-            find: "oplog.rs",
-            filter: {"ts" : {$gt: ts}},
-            tailable: true,
-            awaitData: true,
-            oplogReplay: true
-        });
-        new DBCommandCursor(db, commandResult).forEach(d => {
-            ts = d.ts;
-            printjson(d);
-        });
-    }
-}
-
 TODO: Mention takeaways 2 members - oplog, 3.6 - oplog. 4.0 and 3+ members - changestream.
 
 TODO: Create a QR code with a link to demos.
