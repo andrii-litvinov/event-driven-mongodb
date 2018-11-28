@@ -7,18 +7,22 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Serilog;
 
+// ReSharper disable once PossibleInvalidCastExceptionInForeachLoop
+// ReSharper disable once MethodSupportsCancellation
+
 namespace Common
 {
+    using Handlers = Dictionary<string, Func<DomainEvent, Task>>;
+
     public class EventConsumer : ResilientService
     {
-        private readonly Dictionary<string, Func<DomainEvent, Task>> handlers;
-        private readonly string name;
         private readonly IMongoCollection<Checkpoint> checkpoints;
         private readonly IMongoCollection<EventEnvelope> events;
+        private readonly Dictionary<string, Func<DomainEvent, Task>> handlers;
+        private readonly string name;
         private FilterDefinitionBuilder<EventEnvelope> builder;
 
-        public EventConsumer(string name, IMongoDatabase database, Dictionary<string, Func<DomainEvent, Task>> handlers, ILogger logger) :
-            base(logger)
+        public EventConsumer(string name, IMongoDatabase database, Handlers handlers, ILogger logger) : base(logger)
         {
             this.name = name;
             this.handlers = handlers;
@@ -53,13 +57,13 @@ namespace Common
                     .ForEachAsync(async envelope =>
                     {
                         if (envelope.TryGetDomainEvent(out var @event) && handlers.TryGetValue(@event.GetType().Name, out var handler))
-                            await handler.Invoke(@event);
+                            foreach (Func<DomainEvent, Task> @delegate in handler.GetInvocationList())
+                                await @delegate.Invoke(@event);
 
                         checkpoint.Position = envelope.Timestamp;
-                        var update = Builders<Checkpoint>.Update.Set(c => c.Position, checkpoint.Position);
-
-                        // ReSharper disable once MethodSupportsCancellation
-                        await checkpoints.UpdateOneAsync(c => c.Id == checkpoint.Id, update);
+                        await checkpoints.UpdateOneAsync(
+                            c => c.Id == checkpoint.Id,
+                            Builders<Checkpoint>.Update.Set(c => c.Position, checkpoint.Position));
                     }, cancellationToken);
 
                 await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);

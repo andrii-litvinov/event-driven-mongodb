@@ -48,7 +48,7 @@ namespace EventPublisher
             await Observable
                 .Create<BatchItem>(observer => cursor.ForEachAsync(
                     operation => EmitEvent(observer, operation), cancellationToken))
-                .Buffer(TimeSpan.FromSeconds(1), 1000)
+                .Buffer(TimeSpan.FromMilliseconds(100), 1000)
                 .Select(items => SaveEvents(items, resumeToken))
                 .Concat();
         }
