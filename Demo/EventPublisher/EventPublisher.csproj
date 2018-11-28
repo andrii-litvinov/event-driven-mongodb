@@ -4,6 +4,7 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>netcoreapp2.1</TargetFramework>
         <LangVersion>latest</LangVersion>
+        <NoWarn>1998</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,8 +14,6 @@
     <ItemGroup>
         <PackageReference Include="SimpleInjector" Version="4.4.0" />
         <PackageReference Include="System.Reactive" Version="4.1.2" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="2.1.1" />
-        <PackageReference Include="Polly" Version="6.1.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.1.1" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
         <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="2.0.0" />

@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
-using MongoDB.Driver;
 using Polly;
 using Serilog;
 
@@ -27,16 +26,12 @@ namespace EventPublisher
                     i => TimeSpan.FromSeconds(30),
                     (e, _) => logger.Fatal(e, "Service faulted. Restarting."));
 
-            var retryOnCursorTimeout = Policy
-                .Handle<MongoCommandException>(e => e.Message.StartsWith("Command getMore failed"))
-                .RetryAsync();
-
             var stopOnCancellation = Policy
                 .Handle<OperationCanceledException>()
                 .FallbackAsync(async ct => { });
 
             await Policy
-                .WrapAsync(retryForever, retryOnCursorTimeout, stopOnCancellation)
+                .WrapAsync(retryForever, stopOnCancellation)
                 .ExecuteAsync(Execute, cancellationToken);
         }
     }
