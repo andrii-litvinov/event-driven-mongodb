@@ -17,9 +17,8 @@ namespace EventPublisher
                 .Enrich.FromLogContext()
                 .Enrich.WithProperty("OsVersion", Environment.OSVersion)
                 .Enrich.WithProperty("Version", assemblyName.Version)
-                .Enrich.WithProperty("OsUser", Environment.UserName)
-                .Enrich.WithProperty("Application", $"{assemblyName.Name}.{configuration["environment"]}")
-                .Enrich.WithProperty("Executable", assemblyName.Name)
+                .Enrich.WithProperty("UserName", Environment.UserName)
+                .Enrich.WithProperty("Application", $"{assemblyName.Name}")
                 .Enrich.WithProperty("Environment", configuration["environment"]);
 
             return loggerConfiguration.CreateLogger();

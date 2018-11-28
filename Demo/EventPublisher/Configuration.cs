@@ -8,7 +8,7 @@ namespace EventPublisher
 
         public static IConfigurationBuilder Configure(this IConfigurationBuilder builder, params string[] args) => builder
             .AddJsonFile("appsettings.json")
-            .AddEnvironmentVariables("synergy:")
+            .AddEnvironmentVariables()
             .AddCommandLine(args);
     }
 }
