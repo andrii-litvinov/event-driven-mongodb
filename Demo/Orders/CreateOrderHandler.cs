@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Orders
@@ -19,13 +18,5 @@ namespace Orders
 
             await orders.InsertOneAsync(order);
         }
-    }
-
-    public class Order
-    {
-        public ObjectId Id { get; set; }
-        public decimal TotalAmount { get; set; }
-
-        public void Create(decimal totalAmount) => TotalAmount = totalAmount;
     }
 }

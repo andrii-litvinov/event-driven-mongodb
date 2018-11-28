@@ -7,10 +7,13 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-using Serilog;
+using Serilog.AspNetCore;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
+using ILogger = Serilog.ILogger;
+using LoggerFactory = Common.LoggerFactory;
 
 namespace Orders
 {
@@ -39,11 +42,13 @@ namespace Orders
                 services.EnableSimpleInjectorCrossWiring(container);
                 services.UseSimpleInjectorAspNetRequestScoping(container);
                 services.AddSingleton(_ => container.GetAllInstances<IHostedService>());
+                services.AddSingleton<ILoggerFactory>(new SerilogLoggerFactory(logger));
 
                 container.RegisterInstance(logger);
-                container.Register(typeof(ICommandHandler<>), typeof(Program).Assembly);
                 container.Collection.Register<IHostedService>(typeof(Program).Assembly);
-                
+                container.Register(typeof(ICommandHandler<>), typeof(Program).Assembly);
+                container.RegisterDecorator(typeof(ICommandHandler<>), typeof(LoggerDecorator<>));
+
                 var mongoUrl = configuration["mongo:url"];
                 var url = new MongoUrl(mongoUrl);
                 var client = new MongoClient(url);
