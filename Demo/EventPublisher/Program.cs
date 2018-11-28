@@ -1,12 +1,46 @@
 ﻿using System;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+// ReSharper disable AccessToDisposedClosure
 
 namespace EventPublisher
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            var configuration = Configuration.GetConfiguration(args);
+            using (var logger = LoggerFactory.Create(configuration))
+            using (var container = Bootstrapper.ConfigureContainer(configuration, logger))
+            {
+                try
+                {
+                    logger.Information("Starting");
+
+                    var host = new HostBuilder()
+                        .ConfigureHostConfiguration(builder => builder.Configure())
+                        .ConfigureServices((context, services) => services.AddSingleton(_ => container.GetAllInstances<IHostedService>()))
+                        .Build();
+
+                    container.Register(() => host.Services.GetRequiredService<IApplicationLifetime>());
+                    container.Verify();
+
+                    using (host)
+                    {
+                        await host.StartAsync();
+                        logger.Information("Started");
+                        await host.WaitForShutdownAsync();
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.Fatal(e, "Event publisher crashed.");
+                }
+
+                logger.Information("Stopped");
+            }
         }
     }
 }
