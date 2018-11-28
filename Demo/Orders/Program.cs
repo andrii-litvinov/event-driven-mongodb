@@ -1,11 +1,12 @@
 ﻿using System;
 
-namespace Service2
+namespace Orders
 {
     class Program
     {
         static void Main()
         {
+            Console.WriteLine("Hello World!");
         }
     }
 }
