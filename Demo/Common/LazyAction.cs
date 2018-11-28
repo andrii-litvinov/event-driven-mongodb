@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Domain
+namespace Common
 {
     public class LazyAction : Lazy<object>
     {

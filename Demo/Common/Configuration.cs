@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace EventPublisher
+namespace Common
 {
     public static class Configuration
     {
@@ -8,7 +8,6 @@ namespace EventPublisher
 
         public static IConfigurationBuilder Configure(this IConfigurationBuilder builder, params string[] args) => builder
             .AddJsonFile("appsettings.json")
-            .AddEnvironmentVariables()
             .AddCommandLine(args);
     }
 }

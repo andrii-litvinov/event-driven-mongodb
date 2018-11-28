@@ -1,4 +1,4 @@
-﻿namespace Domain
+﻿namespace Common
 {
     public static class PrivateField
     {

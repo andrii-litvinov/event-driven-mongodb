@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Conventions;
 
-namespace Domain
+namespace Common
 {
     public static class BsonConfig
     {

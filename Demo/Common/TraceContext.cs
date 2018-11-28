@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace Domain
+namespace Common
 {
     public class TraceContext
     {

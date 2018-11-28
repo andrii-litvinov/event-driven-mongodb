@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Domain;
+using Common;
 using FluentAssertions;
 using MongoDB.Bson;
 using MongoDB.Driver;

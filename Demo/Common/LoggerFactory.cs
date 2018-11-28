@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Core;
 
-namespace EventPublisher
+namespace Common
 {
     public static class LoggerFactory
     {

@@ -4,7 +4,7 @@ using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using AutoFixture;
-using Domain;
+using Common;
 using FluentAssertions.Extensions;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;

@@ -2,7 +2,7 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 
-namespace Domain
+namespace Common
 {
     public class EventEnvelope
     {
