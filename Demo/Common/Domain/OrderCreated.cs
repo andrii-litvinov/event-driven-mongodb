@@ -6,6 +6,6 @@
         {
         }
 
-        public decimal TotalAmount { get; set; }
+        public Order Entity { get; set; }
     }
 }

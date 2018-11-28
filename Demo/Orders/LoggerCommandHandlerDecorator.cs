@@ -22,7 +22,7 @@ namespace Orders
             var timestamp = Stopwatch.GetTimestamp();
             await decorated.Handle(command);
             var duration = Math.Round((Stopwatch.GetTimestamp() - timestamp) / (double) TimeSpan.TicksPerMillisecond, 4);
-            logger.Information("{@command} command handled in {@duration}ms.", command, duration);
+            logger.Information("{@command} command handled in {@duration} ms.", command, duration);
         }
     }
 }

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Serilog;
 
@@ -21,7 +23,7 @@ namespace Common
             this.name = name;
             this.handlers = handlers;
             checkpoints = database.GetCollection<Checkpoint>("checkpoints");
-            events = database.GetCollection<EventEnvelope>("checkpoints");
+            events = database.GetCollection<EventEnvelope>("events");
         }
 
         protected override async Task Execute(CancellationToken cancellationToken)
@@ -34,7 +36,7 @@ namespace Common
                     .Sort(Builders<EventEnvelope>.Sort.Descending(envelope => envelope.Timestamp))
                     .FirstOrDefaultAsync(cancellationToken);
 
-                checkpoint = new Checkpoint {Name = name, Position = @event.Timestamp};
+                checkpoint = new Checkpoint {Name = name, Position = @event?.Timestamp ?? new BsonTimestamp(0, 0)};
                 await checkpoints.InsertOneAsync(checkpoint, cancellationToken: cancellationToken);
             }
 
@@ -42,13 +44,22 @@ namespace Common
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                await events.Find(builder.And(
-                        builder.In("event._t", handlers.Keys),
-                        builder.Gt(envelope => envelope.Timestamp, checkpoint.Position)))
+                await events
+                    .Find(builder.And(
+                            builder.In("event._t", handlers.Keys),
+                            builder.Gt(envelope => envelope.Timestamp, checkpoint.Position))
+                        .Render(BsonSerializer.LookupSerializer<EventEnvelope>(), BsonSerializer.SerializerRegistry))
+                    .Sort(Builders<EventEnvelope>.Sort.Ascending(envelope => envelope.Timestamp))
                     .ForEachAsync(async envelope =>
                     {
                         if (envelope.TryGetDomainEvent(out var @event) && handlers.TryGetValue(@event.GetType().Name, out var handler))
                             await handler.Invoke(@event);
+
+                        checkpoint.Position = envelope.Timestamp;
+                        var update = Builders<Checkpoint>.Update.Set(c => c.Position, checkpoint.Position);
+
+                        // ReSharper disable once MethodSupportsCancellation
+                        await checkpoints.UpdateOneAsync(c => c.Id == checkpoint.Id, update);
                     }, cancellationToken);
 
                 await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);

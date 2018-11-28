@@ -26,8 +26,9 @@ namespace Payments
             var client = new MongoClient(url);
             var database = client.GetDatabase(url.DatabaseName);
             container.RegisterInstance(database);
-            
+
             container.Register(typeof(IEventHandler<>), typeof(Bootstrapper).Assembly);
+            container.RegisterDecorator(typeof(IEventHandler<>), typeof(LoggerEventHandlerDecorator<>));
 
             container.Collection.Append(
                 typeof(IHostedService),

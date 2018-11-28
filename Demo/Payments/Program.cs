@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 using Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
 
 // ReSharper disable AccessToDisposedClosure
 
@@ -13,7 +16,18 @@ namespace Payments
         private static async Task Main(string[] args)
         {
             // TODO: Create indexes for events timestamp, type, sourceId.
+            // TODO: Register events.
+
+            BsonConfig.RegisterConventionPacks();
             
+            BsonClassMap.RegisterClassMap<DomainEvent>(map =>
+            {
+                map.AutoMap();
+                map.MapMember(e => e.SourceId).SetElementName(PrivateField.SourceId).SetSerializer(new StringSerializer(BsonType.ObjectId));
+            });
+
+            BsonClassMap.RegisterClassMap<OrderCreated>();
+
             var configuration = Configuration.GetConfiguration(args);
             using (var logger = LoggerFactory.Create(configuration))
             using (var container = Bootstrapper.ConfigureContainer(configuration, logger))
