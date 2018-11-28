@@ -19,7 +19,8 @@ namespace EventPublisher
             this.databaseName = databaseName;
         }
 
-        public async Task<IAsyncCursor<BsonDocument>> GetCursor(ResumeToken resumeToken, IEnumerable<string> collections, CancellationToken cancellationToken)
+        public async Task<IAsyncCursor<BsonDocument>> GetCursor(ResumeToken resumeToken, IEnumerable<string> collections,
+            CancellationToken cancellationToken)
         {
             BsonValue ts;
 
