@@ -13,12 +13,10 @@ namespace Common
         private readonly IMongoCollection<EventEnvelope> events;
         private readonly IEventObservables observables;
         private readonly string name;
-        private readonly ILogger logger;
 
         public EventObserversConsumer(string name, IMongoDatabase database, ILogger logger, IEventObservables observables) : base(logger)
         {
             this.name = name;
-            this.logger = logger;
             this.observables = observables;
             checkpoints = database.GetCollection<Checkpoint>("checkpoints");
             events = database.GetCollection<EventEnvelope>("events");
