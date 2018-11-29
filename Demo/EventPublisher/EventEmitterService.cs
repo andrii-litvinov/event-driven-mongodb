@@ -155,7 +155,7 @@ namespace EventPublisher
 
             bool TryEmitEmbeddedDomainEvents(BsonDocument document)
             {
-                if (document.TryGetValue(PrivateField.Events, out var evts) && evts is BsonArray embeddedEvents)
+                if (document.TryGetValue(PrivateField.Events, out var e) && e is BsonArray embeddedEvents)
                 {
                     foreach (var @event in embeddedEvents.Cast<BsonDocument>()) OnNext(@event);
                     return true;
@@ -195,7 +195,7 @@ namespace EventPublisher
             return null;
         }
 
-        private async Task<Unit> SaveEvents(IList<BatchItem> items, ResumeToken resumeToken)
+        private async Task<Unit> SaveEvents(ICollection<BatchItem> items, ResumeToken resumeToken)
         {
             if (items.Any())
             {
