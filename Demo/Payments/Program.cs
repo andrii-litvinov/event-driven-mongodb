@@ -12,8 +12,6 @@ namespace Payments
     {
         private static async Task Main(string[] args)
         {
-            // TODO: Create indexes for events timestamp, type, sourceId.
-
             ConventionPacks.Register();
             ClassMaps.Register();
 

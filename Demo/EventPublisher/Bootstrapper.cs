@@ -34,6 +34,8 @@ namespace EventPublisher
             container.Collection.Append(
                 typeof(IHostedService),
                 Lifestyle.Singleton.CreateRegistration(() => container.CreateEventEmitter(mongoUrl), container));
+            
+            container.Collection.Register<IStartupOperation>(typeof(Bootstrapper).Assembly);
 
             return container;
         }

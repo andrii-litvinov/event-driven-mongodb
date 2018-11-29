@@ -13,11 +13,12 @@ namespace Common
         private readonly IMongoCollection<EventEnvelope> events;
         private readonly IEventObservables observables;
         private readonly string name;
-        private readonly FilterDefinitionBuilder<EventEnvelope> builder = Builders<EventEnvelope>.Filter;
+        private readonly ILogger logger;
 
         public EventObserversConsumer(string name, IMongoDatabase database, ILogger logger, IEventObservables observables) : base(logger)
         {
             this.name = name;
+            this.logger = logger;
             this.observables = observables;
             checkpoints = database.GetCollection<Checkpoint>("checkpoints");
             events = database.GetCollection<EventEnvelope>("events");
@@ -44,7 +45,14 @@ namespace Common
                     .Sort(Builders<EventEnvelope>.Sort.Ascending(envelope => envelope.Timestamp))
                     .ForEachAsync(async envelope =>
                     {
-                        if (envelope.TryGetDomainEvent(out var @event)) observables.Publish(@event);
+                        try
+                        {
+                            if (envelope.TryGetDomainEvent(out var @event)) observables.Publish(@event);
+                        }
+                        catch (BsonSerializationException)
+                        {
+                            // Event that occured is not defined by any references dll, so skipping. 
+                        }
 
                         checkpoint.Position = envelope.Timestamp;
                         await checkpoints.UpdateOneAsync(

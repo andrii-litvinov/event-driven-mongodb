@@ -12,8 +12,6 @@ namespace EventPublisher
     {
         private static async Task Main(string[] args)
         {
-            // TODO: Create indexes for events timestamp, type, sourceId.
-            
             var configuration = Configuration.GetConfiguration(args);
             using (var logger = LoggerFactory.Create(configuration))
             using (var container = Bootstrapper.ConfigureContainer(configuration, logger))
@@ -29,6 +27,8 @@ namespace EventPublisher
 
                     container.Register(() => host.Services.GetRequiredService<IApplicationLifetime>());
                     container.Verify();
+
+                    foreach (var startupOperation in container.GetAllInstances<IStartupOperation>()) await startupOperation.Execute();
 
                     using (host)
                     {
