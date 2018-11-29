@@ -75,7 +75,7 @@ namespace EventPublisher
                         {PrivateField.SourceId, document["_id"]},
                         {"entity", document}
                     };
-                    OnNext(CreateEnvelope(@event, trace, timestamp).ToBsonDocument());
+                    OnNext(CreateEnvelope(@event, trace).ToBsonDocument());
 
                     break;
                 }
@@ -112,7 +112,7 @@ namespace EventPublisher
                                         @event.Add(PrivateField.SourceId, documentKey["_id"]);
                                         var trace = GetTrace(@event);
 
-                                        OnNext(CreateEnvelope(@event, trace, timestamp).ToBsonDocument());
+                                        OnNext(CreateEnvelope(@event, trace).ToBsonDocument());
                                     }
 
                                     break;
@@ -134,7 +134,7 @@ namespace EventPublisher
                             {"entity", obj}
                         };
 
-                        OnNext(CreateEnvelope(@event, trace, timestamp).ToBsonDocument());
+                        OnNext(CreateEnvelope(@event, trace).ToBsonDocument());
                     }
 
                     break;
@@ -145,7 +145,7 @@ namespace EventPublisher
                     var type = EventTypeFactory.Create(new BsonDocument(), ChangeStreamOperationType.Delete, map[collectionName]);
                     var @event = new BsonDocument {{"_t", type}, {PrivateField.SourceId, documentKey["_id"]}};
 
-                    OnNext(CreateEnvelope(@event, null, timestamp).ToBsonDocument());
+                    OnNext(CreateEnvelope(@event, null).ToBsonDocument());
                     break;
                 }
                 default:
@@ -172,12 +172,12 @@ namespace EventPublisher
             });
         }
 
-        private static EventEnvelope CreateEnvelope(BsonDocument @event, Trace trace, BsonTimestamp timestamp)
+        private static EventEnvelope CreateEnvelope(BsonDocument @event, Trace trace)
         {
             return new EventEnvelope
             {
                 EventId = trace?.Id ?? Guid.NewGuid().ToString(),
-                Timestamp = timestamp,
+                Timestamp = new BsonTimestamp(0, 0),
                 Event = @event,
                 CorrelationId = trace?.CorrelationId,
                 CausationId = trace?.CausationId

@@ -16,6 +16,7 @@ namespace Common
         {
             EventId = Guid.NewGuid().ToString(),
             Event = @event.ToBsonDocument(),
+            Timestamp = new BsonTimestamp(0, 0),
             CorrelationId = TraceContext.Current.CorrelationId,
             CausationId = TraceContext.Current.CausationId
         };

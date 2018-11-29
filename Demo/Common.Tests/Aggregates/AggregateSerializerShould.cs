@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using EventPublisher.Tests;
 using FluentAssertions;
@@ -42,8 +43,10 @@ namespace Common.Tests
 
             // Assert
             var bsonAggregate = await bsonAggregates.Find(document => document["_id"] == id).FirstAsync();
-            bsonAggregate.TryGetValue(PrivateField.Events, out var events).Should().BeTrue();
-            events.AsBsonArray.Should().HaveCount(1);
+            bsonAggregate.TryGetValue(PrivateField.Events, out var e).Should().BeTrue();
+            var events = (BsonArray) e;
+            events.Should().HaveCount(1);
+            events.First()["timestamp"].Should().Be(new BsonTimestamp(0, 0));
         }
 
         [Theory, InlineServices]
