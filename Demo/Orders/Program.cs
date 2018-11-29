@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
+using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using Common;
 using Common.CommandHandling;
@@ -14,6 +17,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Serilog.AspNetCore;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
@@ -95,11 +100,50 @@ namespace Orders
                     var command = await context.Request.ReadAs<PlaceOrder>();
                     command.OrderId = ObjectId.GenerateNewId().ToString();
 
-                    await container.GetInstance<ICommandHandler<PlaceOrder>>().Handle(command);
+                    var fulfilled = container.GetInstance<IEventObservables>()
+                        .Subscribe<OrderFulfilled>(@event => @event.SourceId == command.OrderId)
+                        .FirstAsync()
+                        .ToTask();
 
+                    var discarded = container.GetInstance<IEventObservables>()
+                        .Subscribe<OrderDiscarded>(@event => @event.SourceId == command.OrderId)
+                        .FirstAsync()
+                        .ToTask();
 
-                    context.Response.StatusCode = (int) HttpStatusCode.Created;
-                    context.Response.Headers.Add("Location", $"orders/{command.OrderId}");
+                    var task = Task.WhenAny(fulfilled, discarded);
+
+                    var handler = container.GetInstance<ICommandHandler<PlaceOrder>>();
+                    await handler.Handle(command);
+
+                    context.Response.Headers.Add("Content-Type", "application/json");
+                    context.Response.Headers.Add("Location", $"/orders/{command.OrderId}");
+
+                    try
+                    {
+                        var completedTask = await task.WithTimeout(TimeSpan.FromSeconds(1));
+                        var @event = completedTask == fulfilled ? (DomainEvent) await fulfilled : await discarded;
+
+                        context.Response.StatusCode = (int) HttpStatusCode.Created;
+                        var serializer = new JsonSerializer {ContractResolver = new CamelCasePropertyNamesContractResolver()};
+                        
+                        var orders = container.GetInstance<IMongoDatabase>().GetCollection<Order>("orders");
+                        var order = await orders.Find(o => o.Id == command.OrderId).FirstAsync();
+
+                        using (var stream = new MemoryStream())
+                        {
+                            using (var writer = new JsonTextWriter(new StreamWriter(stream)) {Formatting = Formatting.Indented})
+                            {
+                                serializer.Serialize(writer, order);
+                            }
+
+                            var bytes = stream.ToArray();
+                            await context.Response.Body.WriteAsync(bytes, 0, bytes.Length);
+                        }
+                    }
+                    catch (TimeoutException)
+                    {
+                        context.Response.StatusCode = (int) HttpStatusCode.Accepted;
+                    }
                 });
 
                 app.UseRouter(router.Build());
