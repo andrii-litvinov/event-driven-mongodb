@@ -14,7 +14,7 @@ namespace Orders
 
         public async Task Handle(PlaceOrder command)
         {
-            var order = new Order(ObjectId.GenerateNewId().ToString());
+            var order = new Order(command.OrderId);
 
             order.Place(command.TotalAmount);
 

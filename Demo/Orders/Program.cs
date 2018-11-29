@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Serilog.AspNetCore;
 using SimpleInjector;
@@ -59,7 +60,7 @@ namespace Orders
                 var client = new MongoClient(url);
                 var database = client.GetDatabase(url.DatabaseName);
                 container.RegisterInstance(database);
-                
+
                 container.Register(typeof(IEventHandler<>), typeof(Program).Assembly);
                 container.RegisterDecorator(typeof(IEventHandler<>), typeof(LoggerEventHandlerDecorator<>));
 
@@ -90,7 +91,12 @@ namespace Orders
 
                 router.MapPost("orders", async context =>
                 {
-                    await container.GetInstance<ICommandHandler<PlaceOrder>>().Handle(await context.Request.ReadAs<PlaceOrder>());
+                    var command = await context.Request.ReadAs<PlaceOrder>();
+                    command.OrderId = ObjectId.GenerateNewId().ToString();
+                    
+                    await container.GetInstance<ICommandHandler<PlaceOrder>>().Handle(command);
+                    
+                    
                     context.Response.StatusCode = (int) HttpStatusCode.Created;
                 });
 
