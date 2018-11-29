@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Serilog;
 
@@ -19,13 +18,15 @@ namespace Common
         private readonly IMongoCollection<Checkpoint> checkpoints;
         private readonly IMongoCollection<EventEnvelope> events;
         private readonly Dictionary<string, Func<DomainEvent, Task>> handlers;
+        private readonly IEventObservables observables;
         private readonly string name;
-        private FilterDefinitionBuilder<EventEnvelope> builder;
 
-        public EventConsumer(string name, IMongoDatabase database, Handlers handlers, ILogger logger) : base(logger)
+        public EventConsumer(string name, IMongoDatabase database, Handlers handlers, ILogger logger, IEventObservables observables) :
+            base(logger)
         {
             this.name = name;
             this.handlers = handlers;
+            this.observables = observables;
             checkpoints = database.GetCollection<Checkpoint>("checkpoints");
             events = database.GetCollection<EventEnvelope>("events");
         }
@@ -36,7 +37,7 @@ namespace Common
             if (checkpoint is null)
             {
                 var @event = await events
-                    .Find(Builders<EventEnvelope>.Filter.In("event._t", handlers.Keys))
+                    .Find(Builders<EventEnvelope>.Filter.Empty)
                     .Sort(Builders<EventEnvelope>.Sort.Descending(envelope => envelope.Timestamp))
                     .FirstOrDefaultAsync(cancellationToken);
 
@@ -44,21 +45,21 @@ namespace Common
                 await checkpoints.InsertOneAsync(checkpoint, cancellationToken: cancellationToken);
             }
 
-            builder = Builders<EventEnvelope>.Filter;
-
             while (!cancellationToken.IsCancellationRequested)
             {
                 await events
-                    .Find(builder.And(
-                            builder.In("event._t", handlers.Keys),
-                            builder.Gt(envelope => envelope.Timestamp, checkpoint.Position))
-                        .Render(BsonSerializer.LookupSerializer<EventEnvelope>(), BsonSerializer.SerializerRegistry))
+                    .Find(envelope => envelope.Timestamp > checkpoint.Position)
                     .Sort(Builders<EventEnvelope>.Sort.Ascending(envelope => envelope.Timestamp))
                     .ForEachAsync(async envelope =>
                     {
-                        if (envelope.TryGetDomainEvent(out var @event) && handlers.TryGetValue(@event.GetType().Name, out var handler))
-                            foreach (Func<DomainEvent, Task> @delegate in handler.GetInvocationList())
-                                await @delegate.Invoke(@event);
+                        if (envelope.TryGetDomainEvent(out var @event))
+                        {
+                            if (handlers.TryGetValue(@event.GetType().Name, out var handler))
+                                foreach (Func<DomainEvent, Task> @delegate in handler.GetInvocationList())
+                                    await @delegate.Invoke(@event);
+
+                            observables.Publish(@event);
+                        }
 
                         checkpoint.Position = envelope.Timestamp;
                         await checkpoints.UpdateOneAsync(

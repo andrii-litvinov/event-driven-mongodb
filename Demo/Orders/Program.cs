@@ -61,6 +61,7 @@ namespace Orders
                 var database = client.GetDatabase(url.DatabaseName);
                 container.RegisterInstance(database);
 
+                container.RegisterSingleton<IEventObservables, EventObservables>();
                 container.Register(typeof(IEventHandler<>), typeof(Program).Assembly);
                 container.RegisterDecorator(typeof(IEventHandler<>), typeof(LoggerEventHandlerDecorator<>));
 
@@ -78,7 +79,7 @@ namespace Orders
                                 nameof(PaymentRejected),
                                 @event => container.GetInstance<IEventHandler<PaymentRejected>>().Handle((PaymentRejected) @event)
                             }
-                        }, logger);
+                        }, logger, container.GetInstance<IEventObservables>());
                         return consumer;
                     }, container));
             })
@@ -93,11 +94,12 @@ namespace Orders
                 {
                     var command = await context.Request.ReadAs<PlaceOrder>();
                     command.OrderId = ObjectId.GenerateNewId().ToString();
-                    
+
                     await container.GetInstance<ICommandHandler<PlaceOrder>>().Handle(command);
-                    
-                    
+
+
                     context.Response.StatusCode = (int) HttpStatusCode.Created;
+                    context.Response.Headers.Add("Location", $"orders/{command.OrderId}");
                 });
 
                 app.UseRouter(router.Build());
