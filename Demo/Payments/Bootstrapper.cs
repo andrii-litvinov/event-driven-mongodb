@@ -36,7 +36,7 @@ namespace Payments
                 {
                     var consumer = new EventConsumer("payments", database, new Dictionary<string, Func<DomainEvent, Task>>
                     {
-                        {nameof(OrderCreated), @event => container.GetInstance<IEventHandler<OrderCreated>>().Handle((OrderCreated) @event)}
+                        {nameof(OrderPlaced), @event => container.GetInstance<IEventHandler<OrderPlaced>>().Handle((OrderPlaced) @event)}
                     }, logger);
                     return consumer;
                 }, container));

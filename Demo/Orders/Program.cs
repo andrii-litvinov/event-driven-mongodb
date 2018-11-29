@@ -66,7 +66,7 @@ namespace Orders
 
                 router.MapPost("orders", async context =>
                 {
-                    await container.GetInstance<ICommandHandler<CreateOrder>>().Handle(await context.Request.ReadAs<CreateOrder>());
+                    await container.GetInstance<ICommandHandler<PlaceOrder>>().Handle(await context.Request.ReadAs<PlaceOrder>());
                     context.Response.StatusCode = (int) HttpStatusCode.Created;
                 });
 

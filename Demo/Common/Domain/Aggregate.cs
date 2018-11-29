@@ -11,6 +11,8 @@ namespace Common
     {
         private List<EventEnvelope> events;
 
+        protected Aggregate(string id) => Id = id;
+
         public string Id { get; set; }
 
         public List<EventEnvelope> Events

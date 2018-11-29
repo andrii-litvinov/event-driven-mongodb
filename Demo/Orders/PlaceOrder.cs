@@ -1,6 +1,6 @@
 ﻿namespace Orders
 {
-    public class CreateOrder
+    public class PlaceOrder
     {
         public decimal TotalAmount { get; set; }
     }
