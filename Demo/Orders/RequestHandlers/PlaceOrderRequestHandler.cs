@@ -44,7 +44,9 @@ namespace Orders
                 {
                     await tcs.Task.WithTimeout(TimeSpan.FromSeconds(1));
                     response.StatusCode = (int) HttpStatusCode.Created;
-                    await response.Write(await orders.Find(o => o.Id == command.OrderId).FirstAsync());
+
+                    var order = await orders.Find(o => o.Id == command.OrderId).FirstAsync();
+                    await response.Write(order);
                 }
                 catch (TimeoutException)
                 {
