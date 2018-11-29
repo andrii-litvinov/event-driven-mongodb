@@ -39,7 +39,7 @@ namespace Common.Tests
             bsonAggregate.TryGetValue(PrivateField.Events, out var events).Should().BeTrue();
             events.AsBsonArray.Should().HaveCount(1);
         }
-        
+
         [Theory, InlineServices]
         public async Task NotDeserializeEvents(ObjectId id, IMongoDatabase database)
         {

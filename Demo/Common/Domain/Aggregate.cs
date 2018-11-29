@@ -11,10 +11,8 @@ namespace Common
     {
         private List<EventEnvelope> events;
 
-        [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
 
-        [BsonIgnoreIfNull, BsonElement(PrivateField.Events)]
         public List<EventEnvelope> Events
         {
             get => events;

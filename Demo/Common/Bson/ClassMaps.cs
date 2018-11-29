@@ -31,11 +31,12 @@ namespace Common
                 map.SetDiscriminatorIsRequired(true);
             });
             
-//            BsonClassMap.RegisterClassMap<EventEnvelope>(map =>
-//            {
-//                map.AutoMap();
-//                map.SetDiscriminatorIsRequired(true);
-//            });
+            BsonClassMap.RegisterClassMap<Aggregate>(map =>
+            {
+                map.AutoMap();
+                map.MapMember(e => e.Id).SetSerializer(new StringSerializer(BsonType.ObjectId));
+                map.MapMember(e => e.Events).SetElementName(PrivateField.Events).SetIgnoreIfNull(true);
+            });
 
             var registerEvent = GetMethodInfo(RegisterEvent<object>);
 
@@ -68,14 +69,5 @@ namespace Common
         }
 
         public static void Register() => Lazy.Invoke();
-    }
-    
-    public class IgnoreSomePropertyConvention : ConventionBase, IMemberMapConvention
-    {
-        public void Apply(BsonMemberMap memberMap)
-        { // more checks will go here for the case above, e.g. type check
-            if (memberMap.MemberName != "DoNotWantToSaveThis")
-                memberMap.SetShouldSerializeMethod(o => false);
-        }
     }
 }
