@@ -34,14 +34,11 @@ namespace Payments
 
             container.Collection.Append(
                 typeof(IHostedService),
-                Lifestyle.Singleton.CreateRegistration(() =>
-                {
-                    var consumer = new EventConsumer("payments", database, new Dictionary<string, Func<DomainEvent, Task>>
+                Lifestyle.Singleton.CreateRegistration(() => new EventHandlersConsumer("payments", database,
+                    new Dictionary<string, Func<DomainEvent, Task>>
                     {
                         {nameof(OrderPlaced), @event => container.GetInstance<IEventHandler<OrderPlaced>>().Handle((OrderPlaced) @event)}
-                    }, logger, container.GetInstance<IEventObservables>());
-                    return consumer;
-                }, container));
+                    }, logger), container));
 
             return container;
         }

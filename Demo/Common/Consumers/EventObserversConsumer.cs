@@ -1,31 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Serilog;
 
-// ReSharper disable once PossibleInvalidCastExceptionInForeachLoop
-// ReSharper disable once MethodSupportsCancellation
-
 namespace Common
 {
-    using Handlers = Dictionary<string, Func<DomainEvent, Task>>;
-
-    public class EventConsumer : ResilientService
+    public class EventObserversConsumer : ResilientService
     {
         private readonly IMongoCollection<Checkpoint> checkpoints;
         private readonly IMongoCollection<EventEnvelope> events;
-        private readonly Dictionary<string, Func<DomainEvent, Task>> handlers;
         private readonly IEventObservables observables;
         private readonly string name;
+        private readonly FilterDefinitionBuilder<EventEnvelope> builder = Builders<EventEnvelope>.Filter;
 
-        public EventConsumer(string name, IMongoDatabase database, Handlers handlers, ILogger logger, IEventObservables observables) :
-            base(logger)
+        public EventObserversConsumer(string name, IMongoDatabase database, ILogger logger, IEventObservables observables) : base(logger)
         {
             this.name = name;
-            this.handlers = handlers;
             this.observables = observables;
             checkpoints = database.GetCollection<Checkpoint>("checkpoints");
             events = database.GetCollection<EventEnvelope>("events");
@@ -52,14 +44,7 @@ namespace Common
                     .Sort(Builders<EventEnvelope>.Sort.Ascending(envelope => envelope.Timestamp))
                     .ForEachAsync(async envelope =>
                     {
-                        if (envelope.TryGetDomainEvent(out var @event))
-                        {
-                            if (handlers.TryGetValue(@event.GetType().Name, out var handler))
-                                foreach (Func<DomainEvent, Task> @delegate in handler.GetInvocationList())
-                                    await @delegate.Invoke(@event);
-
-                            observables.Publish(@event);
-                        }
+                        if (envelope.TryGetDomainEvent(out var @event)) observables.Publish(@event);
 
                         checkpoint.Position = envelope.Timestamp;
                         await checkpoints.UpdateOneAsync(

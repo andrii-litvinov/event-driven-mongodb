@@ -65,9 +65,8 @@ namespace Orders
 
                 container.Collection.Append(
                     typeof(IHostedService),
-                    Lifestyle.Singleton.CreateRegistration(() =>
-                    {
-                        var consumer = new EventConsumer("orders", database, new Dictionary<string, Func<DomainEvent, Task>>
+                    Lifestyle.Singleton.CreateRegistration(() => new EventHandlersConsumer("orders", database,
+                        new Dictionary<string, Func<DomainEvent, Task>>
                         {
                             {
                                 nameof(PaymentAccepted),
@@ -77,9 +76,13 @@ namespace Orders
                                 nameof(PaymentRejected),
                                 @event => container.GetInstance<IEventHandler<PaymentRejected>>().Handle((PaymentRejected) @event)
                             }
-                        }, logger, container.GetInstance<IEventObservables>());
-                        return consumer;
-                    }, container));
+                        }, logger), container));
+
+                container.Collection.Append(
+                    typeof(IHostedService),
+                    Lifestyle.Singleton.CreateRegistration(
+                        () => new EventObserversConsumer("orders-observers", database, logger, container.GetInstance<IEventObservables>()),
+                        container));
             })
             .Configure(app =>
             {
