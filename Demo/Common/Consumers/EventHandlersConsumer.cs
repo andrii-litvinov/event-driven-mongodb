@@ -52,12 +52,8 @@ namespace Common
                     .Sort(Builders<EventEnvelope>.Sort.Ascending(envelope => envelope.Timestamp))
                     .ForEachAsync(async envelope =>
                     {
-                        if (envelope.TryGetDomainEvent(out var @event))
-                        {
-                            if (handlers.TryGetValue(@event.GetType().Name, out var handler))
-                                foreach (Func<DomainEvent, Task> @delegate in handler.GetInvocationList())
-                                    await @delegate.Invoke(@event);
-                        }
+                        if (envelope.TryGetDomainEvent(out var @event) && handlers.TryGetValue(@event.GetType().Name, out var handler))
+                            await handler.Invoke(@event);
 
                         checkpoint.Position = envelope.Timestamp;
                         await checkpoints.UpdateOneAsync(

@@ -5,6 +5,8 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using Serilog;
 
+// ReSharper disable once MethodSupportsCancellation
+
 namespace Common
 {
     public class EventObserversConsumer : ResilientService
