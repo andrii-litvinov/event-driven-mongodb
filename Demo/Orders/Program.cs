@@ -21,8 +21,8 @@ namespace Orders
     {
         public static void Main(string[] args)
         {
-            BsonConfig.RegisterConventionPacks();
-            // TODO: Register class maps for entities and events.
+            ConventionPacks.Register();
+            ClassMaps.Register();
             
             var configuration = Configuration.GetConfiguration(args);
             using (var logger = LoggerFactory.Create(configuration))

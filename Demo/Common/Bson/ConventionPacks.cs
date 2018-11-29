@@ -2,7 +2,7 @@
 
 namespace Common
 {
-    public static class BsonConfig
+    public static class ConventionPacks
     {
         private static readonly LazyAction Lazy = new LazyAction(() =>
             ConventionRegistry.Register("conventions", new ConventionPack
@@ -11,6 +11,6 @@ namespace Common
                 new IgnoreExtraElementsConvention(true)
             }, type => true));
 
-        public static void RegisterConventionPacks() => Lazy.Invoke();
+        public static void Register() => Lazy.Invoke();
     }
 }

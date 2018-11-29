@@ -13,7 +13,7 @@ namespace EventPublisher
     {
         public static Container ConfigureContainer(IConfiguration configuration, ILogger logger)
         {
-            BsonConfig.RegisterConventionPacks();
+            ConventionPacks.Register();
 
             typeof(CollectionElementNameValidator)
                 .GetField("__instance", BindingFlags.Static | BindingFlags.NonPublic)

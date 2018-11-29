@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Common
 {
-    public class Order
+    public class Order : Aggregate
     {
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }

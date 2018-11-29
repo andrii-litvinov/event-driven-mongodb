@@ -6,5 +6,6 @@
             ts = e.timestamp;
             printjson(e);
         });
+        sleep(100);
     }
 })();

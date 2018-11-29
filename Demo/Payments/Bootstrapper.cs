@@ -14,7 +14,7 @@ namespace Payments
     {
         public static Container ConfigureContainer(IConfiguration configuration, ILogger logger)
         {
-            BsonConfig.RegisterConventionPacks();
+            ConventionPacks.Register();
 
             var container = new Container();
 

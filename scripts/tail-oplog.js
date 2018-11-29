@@ -4,7 +4,7 @@
     for(;;) {
         var commandResult = db.runCommand({
             find: "oplog.rs",
-            filter: {"ts" : {$gt: ts}, "ns" : {$nin: ["", "config.system.sessions", "demo.resumetokens"]}},
+            filter: {"ts" : {$gt: ts}, "ns" : {$nin: ["", "config.system.sessions", "demo.resumetokens", "demo.checkpoints"]}},
             tailable: true,
             awaitData: true,
             oplogReplay: true
@@ -13,5 +13,6 @@
             ts = d.ts;
             printjson(d);
         });
+        sleep(100);
     }
 })();
