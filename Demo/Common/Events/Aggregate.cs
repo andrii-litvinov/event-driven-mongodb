@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable ValueParameterNotUsed

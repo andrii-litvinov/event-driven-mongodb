@@ -3,9 +3,6 @@ using System.Threading.Tasks;
 using Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.Serializers;
 
 // ReSharper disable AccessToDisposedClosure
 
