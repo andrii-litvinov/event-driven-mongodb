@@ -17,7 +17,7 @@ namespace Orders
 
             order.Place(command.TotalAmount);
 
-            await orders.InsertOneAsync(order);
+            await orders.Create(order);
         }
     }
 }

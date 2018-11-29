@@ -18,7 +18,7 @@ namespace Payments
             if (new Random().Next() % 2 == 0) payment.Accept();
             else payment.Reject();
 
-            await payments.InsertOneAsync(payment);
+            await payments.Create(payment);
         }
     }
 }
