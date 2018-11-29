@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Orders
+namespace Common.CommandHandling
 {
     public interface ICommandHandler<TCommand>
     {
