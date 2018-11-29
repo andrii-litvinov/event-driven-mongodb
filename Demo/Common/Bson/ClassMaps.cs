@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Bson.Serialization.Serializers;
 
 // ReSharper disable PossibleNullReferenceException
@@ -29,10 +30,17 @@ namespace Common
                 map.AutoMap();
                 map.SetDiscriminatorIsRequired(true);
             });
+            
+//            BsonClassMap.RegisterClassMap<EventEnvelope>(map =>
+//            {
+//                map.AutoMap();
+//                map.SetDiscriminatorIsRequired(true);
+//            });
 
             var registerEvent = GetMethodInfo(RegisterEvent<object>);
 
             AppDomain.CurrentDomain.GetAssemblies()
+                .Where(assembly => !assembly.IsDynamic)
                 .SelectMany(assembly => assembly.GetExportedTypes())
                 .Where(type => typeof(DomainEvent).IsAssignableFrom(type) || typeof(Aggregate).IsAssignableFrom(type))
                 .Where(type => type.IsClass && !type.IsAbstract && !type.IsGenericType)
@@ -60,5 +68,14 @@ namespace Common
         }
 
         public static void Register() => Lazy.Invoke();
+    }
+    
+    public class IgnoreSomePropertyConvention : ConventionBase, IMemberMapConvention
+    {
+        public void Apply(BsonMemberMap memberMap)
+        { // more checks will go here for the case above, e.g. type check
+            if (memberMap.MemberName != "DoNotWantToSaveThis")
+                memberMap.SetShouldSerializeMethod(o => false);
+        }
     }
 }

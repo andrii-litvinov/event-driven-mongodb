@@ -5,9 +5,6 @@ namespace Common
 {
     public class Order : Aggregate
     {
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
-
         public decimal TotalAmount { get; set; }
         public bool Paid { get; set; }
 
