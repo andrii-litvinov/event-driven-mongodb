@@ -1,4 +1,7 @@
-﻿using System.Net;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Threading.Tasks;
 using Common;
 using Common.CommandHandling;
 using Microsoft.AspNetCore;
@@ -24,7 +27,7 @@ namespace Orders
         {
             ConventionPacks.Register();
             ClassMaps.Register();
-            
+
             var configuration = Configuration.GetConfiguration(args);
             using (var logger = LoggerFactory.Create(configuration))
             using (var container = new Container())
@@ -48,7 +51,6 @@ namespace Orders
                 services.AddSingleton<ILoggerFactory>(new SerilogLoggerFactory(logger));
 
                 container.RegisterInstance(logger);
-                container.Collection.Register<IHostedService>(typeof(Program).Assembly);
                 container.Register(typeof(ICommandHandler<>), typeof(Program).Assembly);
                 container.RegisterDecorator(typeof(ICommandHandler<>), typeof(LoggerCommandHandlerDecorator<>));
 
@@ -57,6 +59,27 @@ namespace Orders
                 var client = new MongoClient(url);
                 var database = client.GetDatabase(url.DatabaseName);
                 container.RegisterInstance(database);
+                
+                container.Register(typeof(IEventHandler<>), typeof(Program).Assembly);
+                container.RegisterDecorator(typeof(IEventHandler<>), typeof(LoggerEventHandlerDecorator<>));
+
+                container.Collection.Append(
+                    typeof(IHostedService),
+                    Lifestyle.Singleton.CreateRegistration(() =>
+                    {
+                        var consumer = new EventConsumer("orders", database, new Dictionary<string, Func<DomainEvent, Task>>
+                        {
+                            {
+                                nameof(PaymentAccepted),
+                                @event => container.GetInstance<IEventHandler<PaymentAccepted>>().Handle((PaymentAccepted) @event)
+                            },
+                            {
+                                nameof(PaymentRejected),
+                                @event => container.GetInstance<IEventHandler<PaymentRejected>>().Handle((PaymentRejected) @event)
+                            }
+                        }, logger);
+                        return consumer;
+                    }, container));
             })
             .Configure(app =>
             {

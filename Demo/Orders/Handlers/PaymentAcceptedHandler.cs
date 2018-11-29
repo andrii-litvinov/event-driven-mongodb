@@ -5,7 +5,7 @@ using MongoDB.Driver;
 
 namespace Orders
 {
-    public class PaymentAcceptedHandler : ICommandHandler<PaymentAccepted>
+    public class PaymentAcceptedHandler : IEventHandler<PaymentAccepted>
     {
         private readonly IMongoCollection<Order> orders;
 
