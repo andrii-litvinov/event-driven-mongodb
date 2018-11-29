@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Common;
 using Common.CommandHandling;
-using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Orders

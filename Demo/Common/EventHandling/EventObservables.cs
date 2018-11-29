@@ -12,7 +12,7 @@ namespace Orders
         private readonly ConcurrentDictionary<string, Subject<DomainEvent>> observables =
             new ConcurrentDictionary<string, Subject<DomainEvent>>();
 
-        public IObservable<TEvent> Subscribe<TEvent>(Func<TEvent, bool> predicate) where TEvent : DomainEvent =>
+        public IObservable<TEvent> Observe<TEvent>(Func<TEvent, bool> predicate) where TEvent : DomainEvent =>
             observables
                 .GetOrAdd(typeof(TEvent).Name, key => new Subject<DomainEvent>())
                 .OfType<TEvent>()
