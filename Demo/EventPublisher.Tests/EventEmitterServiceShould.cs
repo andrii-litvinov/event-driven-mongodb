@@ -21,7 +21,45 @@ namespace EventPublisher.Tests
         private readonly string calculationId;
 
         [Fact]
-        public async Task EmitEventForExistingCalculation()
+        public async Task EmitEventOnCreate()
+        {
+            // Arrange
+            var calculation = new Calculation(calculationId);
+            calculation.Add(42);
+            var futureEvent = observable.FirstOfType<NumberAdded>(calculationId);
+
+            // Act
+            await calculations.Create(calculation);
+
+            // Assert
+            calculation.Events.Should().BeEmpty();
+            var @event = await futureEvent;
+            @event.SourceId.Should().Be(calculationId);
+            @event.Result.Should().Be(42);
+        }
+
+        [Fact]
+        public async Task EmitEventOnReplace()
+        {
+            // Arrange
+            var calculation = new Calculation(calculationId);
+            calculation.Add(2);
+            await calculations.Create(calculation);
+            calculation.MultiplyBy(4);
+            var futureEvent = observable.FirstOfType<NumberMultiplied>(calculationId);
+
+            // Act
+            await calculations.Replace(calculation);
+
+            // Assert
+            calculation.Events.Should().BeEmpty();
+            var @event = await futureEvent;
+            @event.SourceId.Should().Be(calculationId);
+            @event.Result.Should().Be(8);
+        }
+
+        [Fact]
+        public async Task EmitEventOnUpdate()
         {
             // Arrange
             var calculation = new Calculation(calculationId);
@@ -38,45 +76,6 @@ namespace EventPublisher.Tests
             var @event = await futureEvent;
             @event.SourceId.Should().Be(calculationId);
             @event.Result.Should().Be(4);
-        }
-
-        [Fact]
-        public async Task EmitEventForExistingCalculationOnReplace()
-        {
-            // Arrange
-            var calculation = new Calculation(calculationId);
-            calculation.Add(2);
-            await calculations.Create(calculation);
-            calculation = await calculations.Find(c => c.Id == calculationId).FirstAsync();
-            calculation.MultiplyBy(4);
-            var futureEvent = observable.FirstOfType<NumberMultiplied>(calculationId);
-
-            // Act
-            await calculations.Replace(calculation);
-
-            // Assert
-            calculation.Events.Should().BeEmpty();
-            var @event = await futureEvent;
-            @event.SourceId.Should().Be(calculationId);
-            @event.Result.Should().Be(8);
-        }
-
-        [Fact]
-        public async Task EmitEventForNewCalculation()
-        {
-            // Arrange
-            var calculation = new Calculation(calculationId);
-            calculation.Add(42);
-            var futureEvent = observable.FirstOfType<NumberAdded>(calculationId);
-
-            // Act
-            await calculations.Create(calculation);
-
-            // Assert
-            calculation.Events.Should().BeEmpty();
-            var @event = await futureEvent;
-            @event.SourceId.Should().Be(calculationId);
-            @event.Result.Should().Be(42);
         }
     }
 }

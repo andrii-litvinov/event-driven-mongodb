@@ -21,8 +21,8 @@ namespace Common.CommandHandling
             logger.Information("Handling {@command} command.", command);
             var timestamp = Stopwatch.GetTimestamp();
             await decorated.Handle(command);
-            var duration = Math.Round((Stopwatch.GetTimestamp() - timestamp) / (double) TimeSpan.TicksPerMillisecond,
-                4);
+            var duration =
+                Math.Round((Stopwatch.GetTimestamp() - timestamp) / (double) TimeSpan.TicksPerMillisecond, 4);
             logger.Information("{@command} command handled in {@duration} ms.", command, duration);
         }
     }
