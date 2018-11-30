@@ -29,6 +29,8 @@ namespace Common
             {
                 map.AutoMap();
                 map.SetDiscriminatorIsRequired(true);
+                map.MapMember(e => e.CorrelationId).SetIgnoreIfNull(true);
+                map.MapMember(e => e.CausationId).SetIgnoreIfNull(true);
             });
 
             BsonClassMap.RegisterClassMap<Aggregate>(map =>
