@@ -12,11 +12,12 @@ namespace Orders
 {
     public class PlaceOrderRequestHandler
     {
-        private readonly IEventObservables observables;
         private readonly ICommandHandler<PlaceOrder> handler;
+        private readonly IEventObservables observables;
         private readonly IMongoCollection<Order> orders;
 
-        public PlaceOrderRequestHandler(IEventObservables observables, ICommandHandler<PlaceOrder> handler, IMongoDatabase database)
+        public PlaceOrderRequestHandler(IEventObservables observables, ICommandHandler<PlaceOrder> handler,
+            IMongoDatabase database)
         {
             this.observables = observables;
             this.handler = handler;

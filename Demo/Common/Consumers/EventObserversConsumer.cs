@@ -13,10 +13,11 @@ namespace Common
     {
         private readonly IMongoCollection<Checkpoint> checkpoints;
         private readonly IMongoCollection<EventEnvelope> events;
-        private readonly IEventObservables observables;
         private readonly string name;
+        private readonly IEventObservables observables;
 
-        public EventObserversConsumer(string name, IMongoDatabase database, ILogger logger, IEventObservables observables) : base(logger)
+        public EventObserversConsumer(string name, IMongoDatabase database, ILogger logger,
+            IEventObservables observables) : base(logger)
         {
             this.name = name;
             this.observables = observables;

@@ -70,18 +70,21 @@ namespace Orders
                         {
                             {
                                 nameof(PaymentAccepted),
-                                @event => container.GetInstance<IEventHandler<PaymentAccepted>>().Handle((PaymentAccepted) @event)
+                                @event => container.GetInstance<IEventHandler<PaymentAccepted>>()
+                                    .Handle((PaymentAccepted) @event)
                             },
                             {
                                 nameof(PaymentRejected),
-                                @event => container.GetInstance<IEventHandler<PaymentRejected>>().Handle((PaymentRejected) @event)
+                                @event => container.GetInstance<IEventHandler<PaymentRejected>>()
+                                    .Handle((PaymentRejected) @event)
                             }
                         }, logger), container));
 
                 container.Collection.Append(
                     typeof(IHostedService),
                     Lifestyle.Singleton.CreateRegistration(
-                        () => new EventObserversConsumer("orders-observers", database, logger, container.GetInstance<IEventObservables>()),
+                        () => new EventObserversConsumer("orders-observers", database, logger,
+                            container.GetInstance<IEventObservables>()),
                         container));
             })
             .Configure(app =>

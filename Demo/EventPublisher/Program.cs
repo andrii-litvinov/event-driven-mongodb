@@ -22,13 +22,15 @@ namespace EventPublisher
 
                     var host = new HostBuilder()
                         .ConfigureHostConfiguration(builder => builder.Configure())
-                        .ConfigureServices((context, services) => services.AddSingleton(_ => container.GetAllInstances<IHostedService>()))
+                        .ConfigureServices((context, services) =>
+                            services.AddSingleton(_ => container.GetAllInstances<IHostedService>()))
                         .Build();
 
                     container.Register(() => host.Services.GetRequiredService<IApplicationLifetime>());
                     container.Verify();
 
-                    foreach (var startupOperation in container.GetAllInstances<IStartupOperation>()) await startupOperation.Execute();
+                    foreach (var startupOperation in container.GetAllInstances<IStartupOperation>())
+                        await startupOperation.Execute();
 
                     using (host)
                     {

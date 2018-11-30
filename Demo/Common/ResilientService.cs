@@ -13,7 +13,9 @@ namespace Common
 
         protected ResilientService(ILogger logger) => this.logger = logger;
 
-        public sealed override Task StartAsync(CancellationToken cancellationToken) => base.StartAsync(cancellationToken);
+        public sealed override Task StartAsync(CancellationToken cancellationToken) =>
+            base.StartAsync(cancellationToken);
+
         public sealed override Task StopAsync(CancellationToken cancellationToken) => base.StopAsync(cancellationToken);
 
         protected abstract Task Execute(CancellationToken cancellationToken);

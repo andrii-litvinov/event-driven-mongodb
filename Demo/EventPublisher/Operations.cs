@@ -19,7 +19,8 @@ namespace EventPublisher
             this.databaseName = databaseName;
         }
 
-        public async Task<IAsyncCursor<BsonDocument>> GetCursor(ResumeToken resumeToken, IEnumerable<string> collections,
+        public async Task<IAsyncCursor<BsonDocument>> GetCursor(ResumeToken resumeToken,
+            IEnumerable<string> collections,
             CancellationToken cancellationToken)
         {
             BsonValue ts;
@@ -44,7 +45,8 @@ namespace EventPublisher
                 builder.Exists("fromMigrate", false)
             );
 
-            var options = new FindOptions<BsonDocument> {CursorType = CursorType.TailableAwait, NoCursorTimeout = true, OplogReplay = true};
+            var options = new FindOptions<BsonDocument>
+                {CursorType = CursorType.TailableAwait, NoCursorTimeout = true, OplogReplay = true};
             return await operations.FindAsync(filter, options, cancellationToken);
         }
     }

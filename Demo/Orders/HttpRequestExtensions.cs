@@ -17,7 +17,9 @@ namespace Orders
 
                 var serializer = new JsonSerializer();
                 using (var reader = new StreamReader(stream))
+                {
                     return (T) serializer.Deserialize(reader, typeof(T));
+                }
             }
         }
 

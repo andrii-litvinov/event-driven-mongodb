@@ -17,12 +17,12 @@ namespace EventPublisher
     {
         private readonly IMongoDatabase database;
         private readonly IMongoCollection<BsonDocument> events;
+        private readonly ILogger logger;
         private readonly IDictionary<string, string> map;
         private readonly string name;
         private readonly IOperations operations;
-        private readonly IResumeTokens tokens;
-        private readonly ILogger logger;
         private readonly TaskCompletionSource<object> started = new TaskCompletionSource<object>();
+        private readonly IResumeTokens tokens;
 
         public EventEmitterService(string name, IMongoDatabase database, IOperations operations,
             IResumeTokens tokens, ILogger logger, IDictionary<string, string> map) : base(logger)
@@ -107,7 +107,8 @@ namespace EventPublisher
                                             .Find(documentKey)
                                             .Project(new BsonDocument("_t", 1))
                                             .FirstOrDefaultAsync();
-                                        var type = EventTypeFactory.Create(document, ChangeStreamOperationType.Update, map[collectionName]);
+                                        var type = EventTypeFactory.Create(document, ChangeStreamOperationType.Update,
+                                            map[collectionName]);
                                         @event.Add("_t", type);
                                         @event.Add(PrivateField.SourceId, documentKey["_id"]);
                                         var trace = GetTrace(@event);
@@ -142,7 +143,8 @@ namespace EventPublisher
                 case "d":
                 {
                     var documentKey = (BsonDocument) operation["o"];
-                    var type = EventTypeFactory.Create(new BsonDocument(), ChangeStreamOperationType.Delete, map[collectionName]);
+                    var type = EventTypeFactory.Create(new BsonDocument(), ChangeStreamOperationType.Delete,
+                        map[collectionName]);
                     var @event = new BsonDocument {{"_t", type}, {PrivateField.SourceId, documentKey["_id"]}};
 
                     OnNext(CreateEnvelope(@event, null).ToBsonDocument());
@@ -172,9 +174,8 @@ namespace EventPublisher
             });
         }
 
-        private static EventEnvelope CreateEnvelope(BsonDocument @event, Trace trace)
-        {
-            return new EventEnvelope
+        private static EventEnvelope CreateEnvelope(BsonDocument @event, Trace trace) =>
+            new EventEnvelope
             {
                 EventId = trace?.Id ?? Guid.NewGuid().ToString(),
                 Timestamp = new BsonTimestamp(0, 0),
@@ -182,7 +183,6 @@ namespace EventPublisher
                 CorrelationId = trace?.CorrelationId,
                 CausationId = trace?.CausationId
             };
-        }
 
         private static Trace GetTrace(BsonDocument entity)
         {

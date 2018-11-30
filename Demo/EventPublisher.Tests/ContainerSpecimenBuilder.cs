@@ -61,7 +61,10 @@ namespace EventPublisher.Tests
             return new NoSpecimen();
         }
 
-        private static bool IsInterfaceArray(Type serviceType) => serviceType.IsArray && serviceType.GetElementType()?.IsInterface == true;
-        private static bool IsFactory(Type serviceType) => serviceType.IsGenericType && serviceType.GetGenericTypeDefinition() == typeof(Func<>);
+        private static bool IsInterfaceArray(Type serviceType) =>
+            serviceType.IsArray && serviceType.GetElementType()?.IsInterface == true;
+
+        private static bool IsFactory(Type serviceType) =>
+            serviceType.IsGenericType && serviceType.GetGenericTypeDefinition() == typeof(Func<>);
     }
 }

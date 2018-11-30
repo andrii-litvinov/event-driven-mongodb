@@ -15,13 +15,14 @@ namespace Common
 
     public class EventHandlersConsumer : ResilientService
     {
+        private readonly FilterDefinitionBuilder<EventEnvelope> builder = Builders<EventEnvelope>.Filter;
         private readonly IMongoCollection<Checkpoint> checkpoints;
         private readonly IMongoCollection<EventEnvelope> events;
         private readonly Dictionary<string, Func<DomainEvent, Task>> handlers;
         private readonly string name;
-        private readonly FilterDefinitionBuilder<EventEnvelope> builder = Builders<EventEnvelope>.Filter;
 
-        public EventHandlersConsumer(string name, IMongoDatabase database, Handlers handlers, ILogger logger) : base(logger)
+        public EventHandlersConsumer(string name, IMongoDatabase database, Handlers handlers, ILogger logger) :
+            base(logger)
         {
             this.name = name;
             this.handlers = handlers;
@@ -52,7 +53,8 @@ namespace Common
                     .Sort(Builders<EventEnvelope>.Sort.Ascending(envelope => envelope.Timestamp))
                     .ForEachAsync(async envelope =>
                     {
-                        if (envelope.TryGetDomainEvent(out var @event) && handlers.TryGetValue(@event.GetType().Name, out var handler))
+                        if (envelope.TryGetDomainEvent(out var @event) &&
+                            handlers.TryGetValue(@event.GetType().Name, out var handler))
                             await handler.Invoke(@event);
 
                         checkpoint.Position = envelope.Timestamp;

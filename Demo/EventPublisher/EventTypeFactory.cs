@@ -6,7 +6,8 @@ namespace EventPublisher
 {
     public static class EventTypeFactory
     {
-        public static string Create(BsonDocument document, ChangeStreamOperationType operationType, string defaultEventPrefix)
+        public static string Create(BsonDocument document, ChangeStreamOperationType operationType,
+            string defaultEventPrefix)
         {
             var prefix = defaultEventPrefix;
             if (document != null && document.TryGetValue("_t", out var t)) prefix = (string) t;

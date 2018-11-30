@@ -21,7 +21,8 @@ namespace Common
             logger.Information("Handling {@event} event.", @event);
             var timestamp = Stopwatch.GetTimestamp();
             await decorated.Handle(@event);
-            var duration = Math.Round((Stopwatch.GetTimestamp() - timestamp) / (double) TimeSpan.TicksPerMillisecond, 4);
+            var duration = Math.Round((Stopwatch.GetTimestamp() - timestamp) / (double) TimeSpan.TicksPerMillisecond,
+                4);
             logger.Information("{@event} event handled in {@duration} ms.", @event, duration);
         }
     }

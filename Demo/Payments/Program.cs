@@ -25,7 +25,8 @@ namespace Payments
 
                     var host = new HostBuilder()
                         .ConfigureHostConfiguration(builder => builder.Configure())
-                        .ConfigureServices((context, services) => services.AddSingleton(_ => container.GetAllInstances<IHostedService>()))
+                        .ConfigureServices((context, services) =>
+                            services.AddSingleton(_ => container.GetAllInstances<IHostedService>()))
                         .Build();
 
                     container.Register(() => host.Services.GetRequiredService<IApplicationLifetime>());

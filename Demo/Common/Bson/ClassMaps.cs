@@ -21,7 +21,8 @@ namespace Common
             BsonClassMap.RegisterClassMap<DomainEvent>(map =>
             {
                 map.AutoMap();
-                map.MapMember(e => e.SourceId).SetElementName(PrivateField.SourceId).SetSerializer(new StringSerializer(BsonType.ObjectId));
+                map.MapMember(e => e.SourceId).SetElementName(PrivateField.SourceId)
+                    .SetSerializer(new StringSerializer(BsonType.ObjectId));
             });
 
             BsonClassMap.RegisterClassMap<EventEnvelope>(map =>
@@ -29,7 +30,7 @@ namespace Common
                 map.AutoMap();
                 map.SetDiscriminatorIsRequired(true);
             });
-            
+
             BsonClassMap.RegisterClassMap<Aggregate>(map =>
             {
                 map.AutoMap();
@@ -58,7 +59,8 @@ namespace Common
 
         private static void LeadAssembliesWithEvents()
         {
-            var locations = AppDomain.CurrentDomain.GetAssemblies().Where(assembly => !assembly.IsDynamic).Select(assembly => assembly.Location);
+            var locations = AppDomain.CurrentDomain.GetAssemblies().Where(assembly => !assembly.IsDynamic)
+                .Select(assembly => assembly.Location);
             var loadedAssemblies = new HashSet<string>(locations);
             Directory
                 .EnumerateFiles(Path.GetDirectoryName(typeof(ClassMaps).Assembly.Location), "*.dll")

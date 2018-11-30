@@ -37,7 +37,10 @@ namespace Payments
                 Lifestyle.Singleton.CreateRegistration(() => new EventHandlersConsumer("payments", database,
                     new Dictionary<string, Func<DomainEvent, Task>>
                     {
-                        {nameof(OrderPlaced), @event => container.GetInstance<IEventHandler<OrderPlaced>>().Handle((OrderPlaced) @event)}
+                        {
+                            nameof(OrderPlaced),
+                            @event => container.GetInstance<IEventHandler<OrderPlaced>>().Handle((OrderPlaced) @event)
+                        }
                     }, logger), container));
 
             return container;

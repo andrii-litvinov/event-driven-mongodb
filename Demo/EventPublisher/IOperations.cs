@@ -8,6 +8,7 @@ namespace EventPublisher
 {
     public interface IOperations
     {
-        Task<IAsyncCursor<BsonDocument>> GetCursor(ResumeToken resumeToken, IEnumerable<string> collections, CancellationToken cancellationToken);
+        Task<IAsyncCursor<BsonDocument>> GetCursor(ResumeToken resumeToken, IEnumerable<string> collections,
+            CancellationToken cancellationToken);
     }
 }
