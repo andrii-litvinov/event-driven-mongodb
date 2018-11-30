@@ -8,11 +8,11 @@ namespace Orders
 {
     public static class HttpRequestExtensions
     {
-        public static async Task<T> ReadAs<T>(this HttpRequest request)
+        public static async Task<T> ReadAs<T>(this Stream body)
         {
             using (var stream = new MemoryStream())
             {
-                await request.Body.CopyToAsync(stream);
+                await body.CopyToAsync(stream);
                 stream.Seek(0, SeekOrigin.Begin);
 
                 var serializer = new JsonSerializer();

@@ -20,19 +20,15 @@ namespace Common
         {
             var tcs = new TaskCompletionSource<DomainEvent>();
 
-            IDisposable subscription = null;
-            subscription = merge
+            var subscription = merge
                 .ObserveOn(Scheduler.Default)
                 .SubscribeOn(Scheduler.Default)
-                .Subscribe(
-                    e =>
-                    {
-                        // ReSharper disable once AccessToModifiedClosure
-                        subscription?.Dispose();
-                        tcs.TrySetResult(e);
-                    });
+                .Subscribe(e => tcs.TrySetResult(e));
 
-            return tcs.Task;
+            var task = tcs.Task.WithTimeout(TimeSpan.FromSeconds(1));
+            task.ContinueWith(_ => subscription.Dispose());
+
+            return task;
         }
     }
 }

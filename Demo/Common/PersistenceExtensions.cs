@@ -16,7 +16,6 @@ namespace Common
             await collection.UpdateOneAsync(new ExpressionFilterDefinition<T>(a => a.Id == aggregate.Id),
                 aggregate.GetUpdateDefinition());
 
-        // TODO: Add tracing.
         private static UpdateDefinition<T> GetUpdateDefinition<T>(this T entity) =>
             Builders<T>.Update.Combine(entity.ToBsonDocument()
                 .Select(element => Builders<T>.Update.Set(element.Name, element.Value)));

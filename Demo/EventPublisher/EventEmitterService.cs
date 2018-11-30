@@ -10,6 +10,9 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Serilog;
+using static System.StringComparison;
+using static Common.PrivateField;
+using static MongoDB.Driver.ChangeStreamOperationType;
 
 namespace EventPublisher
 {
@@ -55,8 +58,10 @@ namespace EventPublisher
 
         private async Task EmitEvent(IObserver<BatchItem> observer, BsonDocument operation)
         {
+            // TODO: Emit only embedded events.
+            
             var @namespace = (string) operation["ns"];
-            var collectionName = @namespace.Substring(@namespace.IndexOf(".", StringComparison.Ordinal) + 1);
+            var collectionName = @namespace.Substring(@namespace.IndexOf(".", Ordinal) + 1);
             var timestamp = (BsonTimestamp) operation["ts"];
 
             switch ((string) operation["op"])
@@ -68,11 +73,11 @@ namespace EventPublisher
                     if (TryEmitEmbeddedDomainEvents(document)) return;
 
                     var trace = GetTrace(document);
-                    var type = EventTypeFactory.Create(document, ChangeStreamOperationType.Insert, map[collectionName]);
+                    var type = EventTypeFactory.Create(document, Insert, map[collectionName]);
                     var @event = new BsonDocument
                     {
                         {"_t", type},
-                        {PrivateField.SourceId, document["_id"]},
+                        {SourceId, document["_id"]},
                         {"entity", document}
                     };
                     OnNext(CreateEnvelope(@event, trace).ToBsonDocument());
@@ -96,21 +101,16 @@ namespace EventPublisher
                                     break;
                                 case "$set":
                                     var @event = (BsonDocument) obj["$set"];
-                                    if (TryEmitEmbeddedDomainEvents(@event))
-                                    {
-                                        return;
-                                    }
-                                    else
+                                    if (!TryEmitEmbeddedDomainEvents(@event))
                                     {
                                         var collection = database.GetCollection<BsonDocument>(collectionName);
                                         var document = await collection
                                             .Find(documentKey)
                                             .Project(new BsonDocument("_t", 1))
                                             .FirstOrDefaultAsync();
-                                        var type = EventTypeFactory.Create(document, ChangeStreamOperationType.Update,
-                                            map[collectionName]);
+                                        var type = EventTypeFactory.Create(document, Update, map[collectionName]);
                                         @event.Add("_t", type);
-                                        @event.Add(PrivateField.SourceId, documentKey["_id"]);
+                                        @event.Add(SourceId, documentKey["_id"]);
                                         var trace = GetTrace(@event);
 
                                         OnNext(CreateEnvelope(@event, trace).ToBsonDocument());
@@ -119,7 +119,7 @@ namespace EventPublisher
                                     break;
                                 default:
                                     throw new Exception(
-                                        $"Command {command} is not recognized. Timestamp: {timestamp}, hash: {operation["h"]}.");
+                                        $"Command {command} is not recognized at timestamp: {timestamp}.");
                             }
                     }
                     else
@@ -127,11 +127,11 @@ namespace EventPublisher
                         if (TryEmitEmbeddedDomainEvents(obj)) return;
 
                         var trace = GetTrace(obj);
-                        var type = EventTypeFactory.Create(obj, ChangeStreamOperationType.Replace, map[collectionName]);
+                        var type = EventTypeFactory.Create(obj, Replace, map[collectionName]);
                         var @event = new BsonDocument
                         {
                             {"_t", type},
-                            {PrivateField.SourceId, documentKey["_id"]},
+                            {SourceId, documentKey["_id"]},
                             {"entity", obj}
                         };
 
@@ -143,21 +143,20 @@ namespace EventPublisher
                 case "d":
                 {
                     var documentKey = (BsonDocument) operation["o"];
-                    var type = EventTypeFactory.Create(new BsonDocument(), ChangeStreamOperationType.Delete,
-                        map[collectionName]);
-                    var @event = new BsonDocument {{"_t", type}, {PrivateField.SourceId, documentKey["_id"]}};
+                    var type = EventTypeFactory.Create(new BsonDocument(), Delete, map[collectionName]);
+                    var @event = new BsonDocument {{"_t", type}, {SourceId, documentKey["_id"]}};
 
                     OnNext(CreateEnvelope(@event, null).ToBsonDocument());
                     break;
                 }
                 default:
                     throw new Exception(
-                        $"Unsupported operation type {operation["op"]} encountered. Timestamp: {timestamp}, hash: {operation["h"]}");
+                        $"Unsupported operation type {operation["op"]} encountered at timestamp: {timestamp}.");
             }
 
             bool TryEmitEmbeddedDomainEvents(BsonDocument document)
             {
-                if (document.TryGetValue(PrivateField.Events, out var e) && e is BsonArray embeddedEvents)
+                if (document.TryGetValue(Events, out var e) && e is BsonArray embeddedEvents)
                 {
                     foreach (var @event in embeddedEvents.Cast<BsonDocument>()) OnNext(@event);
                     return true;
