@@ -8,6 +8,8 @@ using FluentAssertions.Extensions;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Orders;
+using Serilog;
 using SimpleInjector;
 
 namespace EventPublisher.Tests
@@ -16,6 +18,8 @@ namespace EventPublisher.Tests
     {
         private readonly EventEmitterService emitter;
         private readonly IFixture fixture;
+        private readonly EventObserverConsumer consumer;
+        private readonly EventObservable observable;
 
         public EventEmitterFixture()
         {
@@ -25,36 +29,31 @@ namespace EventPublisher.Tests
                 "test-event-emitter",
                 container.GetInstance<IConfiguration>()["mongo:url"],
                 new[] {"test.entities"});
+
+            observable = new EventObservable();
+            consumer = new EventObserverConsumer(
+                "test-event-observer",
+                fixture.Create<IMongoDatabase>(),
+                fixture.Create<ILogger>(),
+                observable);
         }
 
         public IResumeTokens Tokens => fixture.Create<IResumeTokens>();
+        public IEventObservable Observable => observable;
 
-        public IMongoCollection<BsonDocument> Entities =>
-            fixture.Create<IMongoDatabase>().GetCollection<BsonDocument>("test.entities");
-
-        private IMongoCollection<EventEnvelope> Events =>
-            fixture.Create<IMongoDatabase>().GetCollection<EventEnvelope>("events");
+        public IMongoCollection<Calculation> Calculations =>
+            fixture.Create<IMongoDatabase>().GetCollection<Calculation>("test.entities");
 
         protected override async Task Initialize()
         {
+            await consumer.StartAsync(default);
             await emitter.StartAsync(default);
             await emitter.Started;
 
             OnDispose += () => emitter.StopAsync(default);
+            OnDispose += () => consumer.StopAsync(default);
             OnDispose += () => Tokens.RemoveAll("test-event-emitter");
         }
-
-        public async Task<EventEnvelope> GetEvent(ObjectId entityId, string type) =>
-            await Observable
-                .Interval(TimeSpan.FromSeconds(1))
-                .Select(_ =>
-                    Events.Find(e => e.Event[PrivateField.SourceId] == entityId && e.Event["_t"] == type)
-                        .FirstOrDefaultAsync())
-                .Concat()
-                .Where(e => e != null)
-                .FirstAsync()
-                .ToTask()
-                .WithTimeout(10.Seconds());
 
         public T Create<T>() => fixture.Create<T>();
     }

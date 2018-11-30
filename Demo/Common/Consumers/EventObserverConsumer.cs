@@ -9,14 +9,14 @@ using Serilog;
 
 namespace Common
 {
-    public class EventObserversConsumer : ResilientService
+    public class EventObserverConsumer : ResilientService
     {
         private readonly IMongoCollection<Checkpoint> checkpoints;
         private readonly IMongoCollection<EventEnvelope> events;
         private readonly string name;
         private readonly IEventObservable observable;
 
-        public EventObserversConsumer(string name, IMongoDatabase database, ILogger logger,
+        public EventObserverConsumer(string name, IMongoDatabase database, ILogger logger,
             IEventObservable observable) : base(logger)
         {
             this.name = name;
@@ -27,17 +27,7 @@ namespace Common
 
         protected override async Task Execute(CancellationToken cancellationToken)
         {
-            var checkpoint = await checkpoints.Find(c => c.Name == name).FirstOrDefaultAsync(cancellationToken);
-            if (checkpoint is null)
-            {
-                var @event = await events
-                    .Find(Builders<EventEnvelope>.Filter.Empty)
-                    .Sort(Builders<EventEnvelope>.Sort.Descending(envelope => envelope.Timestamp))
-                    .FirstOrDefaultAsync(cancellationToken);
-
-                checkpoint = new Checkpoint {Name = name, Position = @event?.Timestamp ?? new BsonTimestamp(0, 0)};
-                await checkpoints.InsertOneAsync(checkpoint, cancellationToken: cancellationToken);
-            }
+            var checkpoint = await GetCheckpoint(cancellationToken);
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -63,6 +53,34 @@ namespace Common
 
                 await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
             }
+        }
+
+        private async Task<Checkpoint> GetCheckpoint(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var latestEvent = await events
+                    .Find(Builders<EventEnvelope>.Filter.Empty)
+                    .Sort(Builders<EventEnvelope>.Sort.Descending(envelope => envelope.Timestamp))
+                    .FirstOrDefaultAsync();
+                
+                var checkpoint = await checkpoints.Find(c => c.Name == name).FirstOrDefaultAsync(cancellationToken);
+                if (checkpoint is null)
+                {
+                    checkpoint = new Checkpoint {Name = name};
+                    await checkpoints.InsertOneAsync(checkpoint, cancellationToken: cancellationToken);
+                }
+
+                checkpoint.Position = latestEvent?.Timestamp ?? new BsonTimestamp(0, 0);
+                return checkpoint;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
+            
         }
     }
 }

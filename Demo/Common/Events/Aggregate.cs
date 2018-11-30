@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable ValueParameterNotUsed
 

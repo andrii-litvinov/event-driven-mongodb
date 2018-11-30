@@ -13,6 +13,9 @@ namespace EventPublisher.Tests
 
         public static IFixture CreateFixture()
         {
+            ConventionPacks.Register();
+            ClassMaps.Register();
+            
             var configuration = Configuration.GetConfiguration();
             var container = Bootstrapper.ConfigureContainer(configuration, LoggerFactory.Create(configuration));
             var fixture = new Fixture();

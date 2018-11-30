@@ -83,7 +83,7 @@ namespace Orders
                 container.Collection.Append(
                     typeof(IHostedService),
                     Lifestyle.Singleton.CreateRegistration(
-                        () => new EventObserversConsumer("orders-observers", database, logger,
+                        () => new EventObserverConsumer("orders-observers", database, logger,
                             container.GetInstance<IEventObservable>()),
                         container));
             })

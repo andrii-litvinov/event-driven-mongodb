@@ -9,91 +9,74 @@ namespace EventPublisher.Tests
 {
     public class EventEmitterServiceShould : IClassFixture<EventEmitterFixture>
     {
-        public EventEmitterServiceShould(EventEmitterFixture fixture) => this.fixture = fixture;
-        private readonly FilterDefinitionBuilder<BsonDocument> filter = Builders<BsonDocument>.Filter;
-        private readonly EventEmitterFixture fixture;
-        private readonly UpdateDefinitionBuilder<BsonDocument> update = Builders<BsonDocument>.Update;
+        public EventEmitterServiceShould(EventEmitterFixture fixture)
+        {
+            observable = fixture.Observable;
+            calculations = fixture.Calculations;
+            calculationId = fixture.Create<ObjectId>().ToString();
+        }
+
+        private readonly IEventObservable observable;
+        private readonly IMongoCollection<Calculation> calculations;
+        private readonly string calculationId;
 
         [Fact]
-        public async Task EmitCreatedEvent()
+        public async Task EmitEventForExistingCalculation()
         {
             // Arrange
-            var entityId = fixture.Create<ObjectId>();
-            var entity = new BsonDocument {{"_id", entityId}};
+            var calculation = new Calculation(calculationId);
+            calculation.Add(2);
+            await calculations.Create(calculation);
+            calculation.MultiplyBy(2);
+            var futureEvent = observable.FirstOfType<NumberMultiplied>(calculationId);
 
             // Act
-            await fixture.Entities.InsertOneAsync(entity);
+            await calculations.Update(calculation);
 
             // Assert
-            var envelope = await fixture.GetEvent(entityId, "EntityCreated");
-            envelope.EventId.Should().NotBeNullOrEmpty();
-
-            var @event = envelope.Event;
-            @event["_t"].Should().Be("EntityCreated");
-            @event[PrivateField.SourceId].Should().Be(entityId);
-            ((BsonDocument) @event["entity"]).Should().Equal(entity);
+            calculation.Events.Should().BeEmpty();
+            var @event = await futureEvent;
+            @event.SourceId.Should().Be(calculationId);
+            @event.Result.Should().Be(4);
         }
 
         [Fact]
-        public async Task EmitDeletedEvent()
+        public async Task EmitEventForExistingCalculationOnReplace()
         {
             // Arrange
-            var entityId = fixture.Create<ObjectId>();
-            await fixture.Entities.InsertOneAsync(new BsonDocument {{"_id", entityId}, {"_t", "Entity"}});
+            var calculation = new Calculation(calculationId);
+            calculation.Add(2);
+            await calculations.Create(calculation);
+            calculation = await calculations.Find(c => c.Id == calculationId).FirstAsync();
+            calculation.MultiplyBy(4);
+            var futureEvent = observable.FirstOfType<NumberMultiplied>(calculationId);
 
             // Act
-            await fixture.Entities.DeleteOneAsync(filter.Eq("_id", entityId));
+            await calculations.Replace(calculation);
 
             // Assert
-            var envelope = await fixture.GetEvent(entityId, "EntityDeleted");
-            envelope.EventId.Should().NotBeNullOrEmpty();
-
-            var @event = envelope.Event;
-            @event["_t"].Should().Be("EntityDeleted");
-            @event[PrivateField.SourceId].Should().Be(entityId);
+            calculation.Events.Should().BeEmpty();
+            var @event = await futureEvent;
+            @event.SourceId.Should().Be(calculationId);
+            @event.Result.Should().Be(8);
         }
 
         [Fact]
-        public async Task EmitUpdatedEvent()
+        public async Task EmitEventForNewCalculation()
         {
             // Arrange
-            var entityId = fixture.Create<ObjectId>();
-            await fixture.Entities.InsertOneAsync(new BsonDocument
-                {{"_id", entityId}, {"value", true}, {"_t", "Entity"}});
+            var calculation = new Calculation(calculationId);
+            calculation.Add(42);
+            var futureEvent = observable.FirstOfType<NumberAdded>(calculationId);
 
             // Act
-            await fixture.Entities.UpdateOneAsync(filter.Eq("_id", entityId), update.Set("field.value", true));
+            await calculations.Create(calculation);
 
             // Assert
-            var envelope = await fixture.GetEvent(entityId, "EntityUpdated");
-            envelope.EventId.Should().NotBeNullOrEmpty();
-
-            var @event = envelope.Event;
-            @event["_t"].Should().Be("EntityUpdated");
-            @event[PrivateField.SourceId].Should().Be(entityId);
-            @event["field.value"].Should().Be(true);
-        }
-
-        [Fact]
-        public async Task EmitUpdatedEventOnReplace()
-        {
-            // Arrange
-            var entityId = fixture.Create<ObjectId>();
-            var entity = new BsonDocument {{"_id", entityId}, {"value", true}, {"_t", "Entity"}};
-            await fixture.Entities.InsertOneAsync(entity);
-
-            // Act
-            entity["value"] = false;
-            await fixture.Entities.ReplaceOneAsync(filter.Eq("_id", entityId), entity);
-
-            // Assert
-            var envelope = await fixture.GetEvent(entityId, "EntityUpdated");
-            envelope.EventId.Should().NotBeNullOrEmpty();
-
-            var @event = envelope.Event;
-            @event["_t"].Should().Be("EntityUpdated");
-            @event[PrivateField.SourceId].Should().Be(entityId);
-            ((BsonDocument) @event["entity"]).Should().Equal(entity);
+            calculation.Events.Should().BeEmpty();
+            var @event = await futureEvent;
+            @event.SourceId.Should().Be(calculationId);
+            @event.Result.Should().Be(42);
         }
     }
 }
