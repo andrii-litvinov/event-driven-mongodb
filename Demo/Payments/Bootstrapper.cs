@@ -28,7 +28,7 @@ namespace Payments
             var database = client.GetDatabase(url.DatabaseName);
             container.RegisterInstance(database);
 
-            container.RegisterSingleton<IEventObservables, EventObservables>();
+            container.RegisterSingleton<IEventObservable, EventObservable>();
             container.Register(typeof(IEventHandler<>), typeof(Bootstrapper).Assembly);
             container.RegisterDecorator(typeof(IEventHandler<>), typeof(LoggerEventHandlerDecorator<>));
 

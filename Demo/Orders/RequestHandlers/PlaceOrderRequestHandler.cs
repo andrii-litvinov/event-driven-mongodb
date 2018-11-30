@@ -13,46 +13,42 @@ namespace Orders
     public class PlaceOrderRequestHandler
     {
         private readonly ICommandHandler<PlaceOrder> handler;
-        private readonly IEventObservables observables;
+        private readonly IEventObservable observable;
         private readonly IMongoCollection<Order> orders;
 
-        public PlaceOrderRequestHandler(IEventObservables observables, ICommandHandler<PlaceOrder> handler,
+        public PlaceOrderRequestHandler(IEventObservable observable, ICommandHandler<PlaceOrder> handler,
             IMongoDatabase database)
         {
-            this.observables = observables;
+            this.observable = observable;
             this.handler = handler;
             orders = database.GetCollection<Order>("orders");
         }
 
         public async Task Handle(HttpRequest request, HttpResponse response, RouteData routeData)
         {
+            var orderId = ObjectId.GenerateNewId().ToString();
+
+            response.Headers.Add("Content-Type", "application/json");
+            response.Headers.Add("Location", $"/orders/{orderId}");
+
+            var futureEvent = observable.FirstOfType<OrderFulfilled, OrderDiscarded>(orderId);
+
             var command = await request.ReadAs<PlaceOrder>();
-            command.OrderId = ObjectId.GenerateNewId().ToString();
+            command.OrderId = orderId;
 
-            // ReSharper disable once ConvertToLocalFunction
-            Func<DomainEvent, bool> predicate = e => e.SourceId == command.OrderId;
-            var tcs = new TaskCompletionSource<object>();
+            await handler.Handle(command);
 
-            using (observables.Observe<OrderFulfilled>(predicate).Subscribe(e => tcs.SetResult(null)))
-            using (observables.Observe<OrderDiscarded>(predicate).Subscribe(e => tcs.SetResult(null)))
+            try
             {
-                await handler.Handle(command);
+                await futureEvent.WithTimeout(TimeSpan.FromSeconds(1));
 
-                response.Headers.Add("Content-Type", "application/json");
-                response.Headers.Add("Location", $"/orders/{command.OrderId}");
+                response.StatusCode = (int) HttpStatusCode.Created;
 
-                try
-                {
-                    await tcs.Task.WithTimeout(TimeSpan.FromSeconds(1));
-                    response.StatusCode = (int) HttpStatusCode.Created;
-
-                    var order = await orders.Find(o => o.Id == command.OrderId).FirstAsync();
-                    await response.Write(order);
-                }
-                catch (TimeoutException)
-                {
-                    response.StatusCode = (int) HttpStatusCode.Accepted;
-                }
+                await response.Write(await orders.Find(o => o.Id == orderId).FirstAsync());
+            }
+            catch (TimeoutException)
+            {
+                response.StatusCode = (int) HttpStatusCode.Accepted;
             }
         }
     }

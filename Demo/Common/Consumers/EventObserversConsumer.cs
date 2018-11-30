@@ -14,13 +14,13 @@ namespace Common
         private readonly IMongoCollection<Checkpoint> checkpoints;
         private readonly IMongoCollection<EventEnvelope> events;
         private readonly string name;
-        private readonly IEventObservables observables;
+        private readonly IEventObservable observable;
 
         public EventObserversConsumer(string name, IMongoDatabase database, ILogger logger,
-            IEventObservables observables) : base(logger)
+            IEventObservable observable) : base(logger)
         {
             this.name = name;
-            this.observables = observables;
+            this.observable = observable;
             checkpoints = database.GetCollection<Checkpoint>("checkpoints");
             events = database.GetCollection<EventEnvelope>("events");
         }
@@ -48,7 +48,7 @@ namespace Common
                     {
                         try
                         {
-                            if (envelope.TryGetDomainEvent(out var @event)) observables.Publish(@event);
+                            if (envelope.TryGetDomainEvent(out var @event)) observable.Publish(@event);
                         }
                         catch (BsonSerializationException)
                         {

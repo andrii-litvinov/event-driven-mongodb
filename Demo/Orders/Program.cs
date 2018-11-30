@@ -59,7 +59,7 @@ namespace Orders
                 var database = client.GetDatabase(url.DatabaseName);
                 container.RegisterInstance(database);
 
-                container.RegisterSingleton<IEventObservables, EventObservables>();
+                container.RegisterSingleton<IEventObservable, EventObservable>();
                 container.Register(typeof(IEventHandler<>), typeof(Program).Assembly);
                 container.RegisterDecorator(typeof(IEventHandler<>), typeof(LoggerEventHandlerDecorator<>));
 
@@ -84,7 +84,7 @@ namespace Orders
                     typeof(IHostedService),
                     Lifestyle.Singleton.CreateRegistration(
                         () => new EventObserversConsumer("orders-observers", database, logger,
-                            container.GetInstance<IEventObservables>()),
+                            container.GetInstance<IEventObservable>()),
                         container));
             })
             .Configure(app =>

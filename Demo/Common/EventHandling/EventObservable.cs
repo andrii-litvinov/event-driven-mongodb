@@ -7,7 +7,7 @@ using Common;
 
 namespace Orders
 {
-    public class EventObservables : IEventObservables
+    public class EventObservable : IEventObservable
     {
         private readonly ConcurrentDictionary<string, Subject<DomainEvent>> observables =
             new ConcurrentDictionary<string, Subject<DomainEvent>>();
@@ -22,8 +22,7 @@ namespace Orders
 
         public void Publish(DomainEvent @event)
         {
-            if (observables.TryGetValue(@event.GetType().Name, out var subject))
-                subject.OnNext(@event);
+            if (observables.TryGetValue(@event.GetType().Name, out var subject)) subject.OnNext(@event);
         }
     }
 }
