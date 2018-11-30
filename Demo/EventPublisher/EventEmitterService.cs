@@ -7,35 +7,30 @@ using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Serilog;
-using static System.StringComparison;
 using static Common.PrivateField;
-using static MongoDB.Driver.ChangeStreamOperationType;
 
 namespace EventPublisher
 {
     public class EventEmitterService : ResilientService
     {
-        private readonly IMongoDatabase database;
         private readonly IMongoCollection<BsonDocument> events;
         private readonly ILogger logger;
-        private readonly IDictionary<string, string> map;
+        private readonly IEnumerable<string> collectionNames;
         private readonly string name;
         private readonly IOperations operations;
         private readonly TaskCompletionSource<object> started = new TaskCompletionSource<object>();
         private readonly IResumeTokens tokens;
 
         public EventEmitterService(string name, IMongoDatabase database, IOperations operations,
-            IResumeTokens tokens, ILogger logger, IDictionary<string, string> map) : base(logger)
+            IResumeTokens tokens, ILogger logger, IEnumerable<string> collectionNames) : base(logger)
         {
             this.name = name;
             this.operations = operations;
-            this.database = database;
             this.tokens = tokens;
             this.logger = logger;
-            this.map = map;
+            this.collectionNames = collectionNames;
             events = database.GetCollection<BsonDocument>("events");
         }
 
@@ -44,7 +39,7 @@ namespace EventPublisher
         protected override async Task Execute(CancellationToken cancellationToken)
         {
             var resumeToken = await tokens.Get(name, cancellationToken);
-            var cursor = await operations.GetCursor(resumeToken, map.Keys, cancellationToken);
+            var cursor = await operations.GetCursor(resumeToken, collectionNames, cancellationToken);
 
             started.SetResult(null);
 
@@ -56,142 +51,39 @@ namespace EventPublisher
                 .Concat();
         }
 
-        private async Task EmitEvent(IObserver<BatchItem> observer, BsonDocument operation)
+        private static async Task EmitEvent(IObserver<BatchItem> observer, BsonDocument operation)
         {
-            // TODO: Emit only embedded events.
-            
-            var @namespace = (string) operation["ns"];
-            var collectionName = @namespace.Substring(@namespace.IndexOf(".", Ordinal) + 1);
-            var timestamp = (BsonTimestamp) operation["ts"];
-
+            var @object = (BsonDocument) operation["o"];
             switch ((string) operation["op"])
             {
                 case "i":
                 {
-                    var document = (BsonDocument) operation["o"];
-
-                    if (TryEmitEmbeddedDomainEvents(document)) return;
-
-                    var trace = GetTrace(document);
-                    var type = EventTypeFactory.Create(document, Insert, map[collectionName]);
-                    var @event = new BsonDocument
-                    {
-                        {"_t", type},
-                        {SourceId, document["_id"]},
-                        {"entity", document}
-                    };
-                    OnNext(CreateEnvelope(@event, trace).ToBsonDocument());
-
+                    EmitDomainEvents(@object);
                     break;
                 }
                 case "u":
                 {
-                    var documentKey = new BsonDocument("_id", operation["o2"]["_id"]);
-
-                    var obj = (BsonDocument) operation["o"];
-                    var commands = obj.Names.Where(n => n.StartsWith("$")).ToArray();
-
-                    if (commands.Any())
-                    {
-                        foreach (var command in commands)
-                            switch (command)
-                            {
-                                case "$v":
-                                case "$unset":
-                                    break;
-                                case "$set":
-                                    var @event = (BsonDocument) obj["$set"];
-                                    if (!TryEmitEmbeddedDomainEvents(@event))
-                                    {
-                                        var collection = database.GetCollection<BsonDocument>(collectionName);
-                                        var document = await collection
-                                            .Find(documentKey)
-                                            .Project(new BsonDocument("_t", 1))
-                                            .FirstOrDefaultAsync();
-                                        var type = EventTypeFactory.Create(document, Update, map[collectionName]);
-                                        @event.Add("_t", type);
-                                        @event.Add(SourceId, documentKey["_id"]);
-                                        var trace = GetTrace(@event);
-
-                                        OnNext(CreateEnvelope(@event, trace).ToBsonDocument());
-                                    }
-
-                                    break;
-                                default:
-                                    throw new Exception(
-                                        $"Command {command} is not recognized at timestamp: {timestamp}.");
-                            }
-                    }
+                    if (@object.TryGetValue("$set", out var set))
+                        EmitDomainEvents((BsonDocument) set);
                     else
-                    {
-                        if (TryEmitEmbeddedDomainEvents(obj)) return;
-
-                        var trace = GetTrace(obj);
-                        var type = EventTypeFactory.Create(obj, Replace, map[collectionName]);
-                        var @event = new BsonDocument
-                        {
-                            {"_t", type},
-                            {SourceId, documentKey["_id"]},
-                            {"entity", obj}
-                        };
-
-                        OnNext(CreateEnvelope(@event, trace).ToBsonDocument());
-                    }
-
+                        EmitDomainEvents(@object);
                     break;
                 }
-                case "d":
-                {
-                    var documentKey = (BsonDocument) operation["o"];
-                    var type = EventTypeFactory.Create(new BsonDocument(), Delete, map[collectionName]);
-                    var @event = new BsonDocument {{"_t", type}, {SourceId, documentKey["_id"]}};
-
-                    OnNext(CreateEnvelope(@event, null).ToBsonDocument());
-                    break;
-                }
-                default:
-                    throw new Exception(
-                        $"Unsupported operation type {operation["op"]} encountered at timestamp: {timestamp}.");
             }
 
-            bool TryEmitEmbeddedDomainEvents(BsonDocument document)
+            void EmitDomainEvents(BsonDocument document)
             {
                 if (document.TryGetValue(Events, out var e) && e is BsonArray embeddedEvents)
-                {
-                    foreach (var @event in embeddedEvents.Cast<BsonDocument>()) OnNext(@event);
-                    return true;
-                }
-
-                return false;
+                    foreach (var @event in embeddedEvents.Cast<BsonDocument>())
+                        OnNext(@event);
             }
 
             void OnNext(BsonDocument envelope) => observer.OnNext(new BatchItem
             {
                 Envelope = envelope,
-                Token = new BsonDocument {{"ts", timestamp}, {"h", operation["h"]}},
+                Token = new BsonDocument {{"ts", (BsonTimestamp) operation["ts"]}, {"h", operation["h"]}},
                 WallClock = (DateTime) operation["wall"]
             });
-        }
-
-        private static EventEnvelope CreateEnvelope(BsonDocument @event, Trace trace) =>
-            new EventEnvelope
-            {
-                EventId = trace?.Id ?? Guid.NewGuid().ToString(),
-                Timestamp = new BsonTimestamp(0, 0),
-                Event = @event,
-                CorrelationId = trace?.CorrelationId,
-                CausationId = trace?.CausationId
-            };
-
-        private static Trace GetTrace(BsonDocument entity)
-        {
-            if (entity.TryGetValue(PrivateField.Trace, out var t))
-            {
-                entity.Remove(PrivateField.Trace);
-                return BsonSerializer.Deserialize<Trace>((BsonDocument) t);
-            }
-
-            return null;
         }
 
         private async Task<Unit> SaveEvents(ICollection<BatchItem> items, ResumeToken resumeToken)

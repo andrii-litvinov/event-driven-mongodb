@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
@@ -25,7 +24,7 @@ namespace EventPublisher.Tests
             emitter = container.CreateEventEmitter(
                 "test-event-emitter",
                 container.GetInstance<IConfiguration>()["mongo:url"],
-                new Dictionary<string, string> {{"test.entities", "Entity"}});
+                new[] {"test.entities"});
         }
 
         public IResumeTokens Tokens => fixture.Create<IResumeTokens>();

@@ -9,7 +9,7 @@ namespace EventPublisher
     public static class EventEmitterFactory
     {
         public static EventEmitterService CreateEventEmitter(this Container container, string name, string mongoUrl,
-            IDictionary<string, string> collectionMap)
+            IEnumerable<string> collectionNames)
         {
             var url = new MongoUrl(mongoUrl);
             var client = new MongoClient(url);
@@ -22,14 +22,10 @@ namespace EventPublisher
                 operations,
                 container.GetInstance<IResumeTokens>(),
                 container.GetInstance<ILogger>(),
-                collectionMap);
+                collectionNames);
         }
 
         public static EventEmitterService CreateEventEmitter(this Container container, string mongoUrl) =>
-            container.CreateEventEmitter("emitter", mongoUrl, new Dictionary<string, string>
-            {
-                {"orders", "Order"},
-                {"payments", "Payment"}
-            });
+            container.CreateEventEmitter("emitter", mongoUrl, new[] {"orders", "payments"});
     }
 }
