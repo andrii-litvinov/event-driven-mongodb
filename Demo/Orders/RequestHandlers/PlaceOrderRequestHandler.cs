@@ -48,7 +48,7 @@ namespace Orders
                 response.StatusCode = (int) HttpStatusCode.Accepted;
             }
 
-            await response.Write(await orders.Find(o => o.Id == orderId).FirstAsync());
+            await response.Body.Write(await orders.Find(o => o.Id == orderId).FirstAsync());
         }
     }
 }

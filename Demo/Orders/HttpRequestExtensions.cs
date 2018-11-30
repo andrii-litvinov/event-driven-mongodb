@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 namespace Orders
@@ -23,9 +24,10 @@ namespace Orders
             }
         }
 
-        public static async Task Write<T>(this HttpResponse response, T value)
+        public static async Task Write<T>(this Stream body, T value)
         {
             var serializer = new JsonSerializer {ContractResolver = new CamelCasePropertyNamesContractResolver()};
+            serializer.Converters.Add(new StringEnumConverter {CamelCaseText = true});
 
             using (var stream = new MemoryStream())
             {
@@ -35,7 +37,7 @@ namespace Orders
                 }
 
                 var bytes = stream.ToArray();
-                await response.Body.WriteAsync(bytes, 0, bytes.Length);
+                await body.WriteAsync(bytes, 0, bytes.Length);
             }
         }
     }

@@ -22,9 +22,9 @@ namespace Orders
             }
             else
             {
-                response.StatusCode = (int) HttpStatusCode.Found;
+                response.StatusCode = (int) HttpStatusCode.OK;
                 response.Headers.Add("Content-Type", "application/json");
-                await response.Write(order);
+                await response.Body.Write(order);
             }
         }
     }

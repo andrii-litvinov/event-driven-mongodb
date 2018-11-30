@@ -9,24 +9,24 @@ namespace Orders
         }
 
         public decimal TotalAmount { get; set; }
-        public bool Fulfilled { get; set; }
-        public bool Discarded { get; set; }
+        public OrderStatus Status { get; set; }
 
         public void Place(decimal totalAmount)
         {
             TotalAmount = totalAmount;
+            Status = OrderStatus.Pending;
             RecordEvent(new OrderPlaced(Id, totalAmount));
         }
 
         public void Fulfill()
         {
-            Fulfilled = true;
+            Status = OrderStatus.Fulfilled;
             RecordEvent(new OrderFulfilled(Id));
         }
 
         public void Discard()
         {
-            Discarded = true;
+            Status = OrderStatus.Discarded;
             RecordEvent(new OrderDiscarded(Id));
         }
     }

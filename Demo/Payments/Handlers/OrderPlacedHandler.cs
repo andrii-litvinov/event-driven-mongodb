@@ -15,8 +15,12 @@ namespace Payments
         {
             var payment = new Payment(ObjectId.GenerateNewId().ToString(), @event.SourceId, @event.TotalAmount);
 
-            if (new Random().Next() % 2 == 0) payment.Accept();
+            var delay = new Random().Next(0, 1100);
+
+            if (delay % 2 == 0) payment.Accept();
             else payment.Reject();
+
+            await Task.Delay(delay);
 
             await payments.Create(payment);
         }
