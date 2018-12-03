@@ -7,11 +7,9 @@
             filter: {
                 "ts": { $gt: ts },
                 "ns": {
-                    $nin: [
-                        "",
-                        "config.system.sessions",
-                        "demo.resumetokens", "demo.checkpoints",
-                        "demo.events"
+                    $in: [
+                        "demo.orders",
+                        "demo.payments",
                     ]
                 }
             },
