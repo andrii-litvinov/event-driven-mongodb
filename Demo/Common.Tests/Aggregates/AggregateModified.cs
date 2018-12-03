@@ -1,3 +1,5 @@
+using Events;
+
 namespace Common.Tests
 {
     public class AggregateModified : DomainEvent

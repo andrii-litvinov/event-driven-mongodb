@@ -1,12 +1,7 @@
-using System;
-using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using AutoFixture;
 using Common;
-using FluentAssertions.Extensions;
 using Microsoft.Extensions.Configuration;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using Orders;
 using Serilog;

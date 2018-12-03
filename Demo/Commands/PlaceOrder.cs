@@ -1,4 +1,4 @@
-﻿namespace Orders
+﻿namespace Commands
 {
     public class PlaceOrder
     {

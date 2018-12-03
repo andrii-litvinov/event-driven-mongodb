@@ -1,4 +1,4 @@
-namespace Common
+namespace Events
 {
     public class PaymentAccepted : DomainEvent
     {

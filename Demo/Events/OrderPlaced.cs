@@ -1,6 +1,6 @@
 ﻿// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
-namespace Common
+namespace Events
 {
     public class OrderPlaced : DomainEvent
     {

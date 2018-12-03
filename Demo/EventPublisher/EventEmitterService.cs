@@ -9,7 +9,6 @@ using Common;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Serilog;
-using static Common.PrivateField;
 
 namespace EventPublisher
 {
@@ -73,7 +72,7 @@ namespace EventPublisher
 
             void EmitDomainEvents(BsonDocument document)
             {
-                if (document.TryGetValue(Events, out var e) && e is BsonArray embeddedEvents)
+                if (document.TryGetValue(PrivateField.Events, out var e) && e is BsonArray embeddedEvents)
                     foreach (var @event in embeddedEvents.Cast<BsonDocument>())
                         OnNext(@event);
             }

@@ -1,4 +1,5 @@
 ﻿using Common;
+using Events;
 
 namespace Orders
 {
