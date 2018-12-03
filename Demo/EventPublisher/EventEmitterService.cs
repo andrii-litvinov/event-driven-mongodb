@@ -77,9 +77,9 @@ namespace EventPublisher
                         OnNext(@event);
             }
 
-            void OnNext(BsonDocument envelope) => observer.OnNext(new BatchItem
+            void OnNext(BsonDocument @event) => observer.OnNext(new BatchItem
             {
-                Envelope = envelope,
+                Event = @event,
                 Token = new BsonDocument {{"ts", (BsonTimestamp) operation["ts"]}, {"h", operation["h"]}},
                 WallClock = (DateTime) operation["wall"]
             });
@@ -91,7 +91,7 @@ namespace EventPublisher
             {
                 var last = items.Last();
 
-                await events.InsertManyAsync(items.Select(item => item.Envelope));
+                await events.InsertManyAsync(items.Select(item => item.Event));
 
                 resumeToken.Token = last.Token;
                 resumeToken.Updated = last.WallClock;
@@ -106,7 +106,7 @@ namespace EventPublisher
 
         private class BatchItem
         {
-            public BsonDocument Envelope { get; set; }
+            public BsonDocument Event { get; set; }
             public BsonDocument Token { get; set; }
             public DateTime WallClock { get; set; }
         }
