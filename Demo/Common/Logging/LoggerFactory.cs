@@ -19,7 +19,8 @@ namespace Common
                 .Enrich.WithProperty("Version", assemblyName.Version)
                 .Enrich.WithProperty("UserName", Environment.UserName)
                 .Enrich.WithProperty("Application", $"{assemblyName.Name}")
-                .Enrich.WithProperty("Environment", configuration["environment"]);
+                .Enrich.WithProperty("Environment", configuration["environment"])
+                .Enrich.With(new TraceContextEnricher());
 
             return loggerConfiguration.CreateLogger();
         }
