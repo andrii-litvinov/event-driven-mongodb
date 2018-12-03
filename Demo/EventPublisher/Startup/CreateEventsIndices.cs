@@ -16,9 +16,9 @@ namespace EventPublisher
             await events.Indexes.CreateManyAsync(new[]
             {
                 new CreateIndexModel<EventEnvelope>(indexKeys.Ascending(e => e.Timestamp), options),
-                new CreateIndexModel<EventEnvelope>(indexKeys.Ascending(e => e.Event["_t"]).Ascending(e => e.Timestamp),
+                new CreateIndexModel<EventEnvelope>(indexKeys.Ascending("event._t").Ascending(e => e.Timestamp),
                     options),
-                new CreateIndexModel<EventEnvelope>(indexKeys.Ascending(e => e.Event[PrivateField.SourceId]), options)
+                new CreateIndexModel<EventEnvelope>(indexKeys.Ascending($"event.{PrivateField.SourceId}"), options)
             });
     }
 }

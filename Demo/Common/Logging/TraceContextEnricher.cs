@@ -10,7 +10,11 @@ namespace Common
             var context = TraceContext.Current;
             if (context != TraceContext.Empty)
             {
-                logEvent.AddPropertyIfAbsent(new LogEventProperty("@trace", new ScalarValue(context)));
+                if (!string.IsNullOrEmpty(context.CorrelationId))
+                    logEvent.AddPropertyIfAbsent(new LogEventProperty(nameof(context.CorrelationId), new ScalarValue(context.CorrelationId)));
+                
+                if (!string.IsNullOrEmpty(context.CausationId))
+                    logEvent.AddPropertyIfAbsent(new LogEventProperty(nameof(context.CausationId), new ScalarValue(context.CausationId)));
             }
         }
     }

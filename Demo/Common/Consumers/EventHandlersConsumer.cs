@@ -54,23 +54,27 @@ namespace Common
                     .Sort(Builders<EventEnvelope>.Sort.Ascending(envelope => envelope.Timestamp))
                     .ForEachAsync(async envelope =>
                     {
-                        if (envelope.TryGetDomainEvent(out var @event) &&
-                            handlers.TryGetValue(@event.GetType().Name, out var handler))
+                        if (handlers.TryGetValue(envelope.Event.GetType().Name, out var handler))
                         {
                             if (!string.IsNullOrEmpty(envelope.CorrelationId))
                                 TraceContext.Set(envelope.CorrelationId, envelope.EventId);
 
-                            await handler.Invoke(@event);
+                            await handler.Invoke(envelope.Event);
                         }
 
-                        checkpoint.Position = envelope.Timestamp;
-                        await checkpoints.UpdateOneAsync(
-                            c => c.Id == checkpoint.Id,
-                            Builders<Checkpoint>.Update.Set(c => c.Position, checkpoint.Position));
+                        await SaveCheckpoint(checkpoint, envelope.Timestamp);
                     }, cancellationToken);
 
                 await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
             }
+        }
+
+        private async Task SaveCheckpoint(Checkpoint checkpoint, BsonTimestamp position)
+        {
+            checkpoint.Position = position;
+            await checkpoints.UpdateOneAsync(
+                c => c.Id == checkpoint.Id,
+                Builders<Checkpoint>.Update.Set(c => c.Position, checkpoint.Position));
         }
     }
 }

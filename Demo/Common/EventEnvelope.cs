@@ -7,7 +7,7 @@ namespace Common
 {
     public class EventEnvelope
     {
-        public BsonDocument Event { get; set; }
+        public DomainEvent Event { get; set; }
         public BsonTimestamp Timestamp { get; set; }
         public string EventId { get; set; }
         public string CorrelationId { get; set; }
@@ -16,22 +16,10 @@ namespace Common
         public static EventEnvelope Wrap(DomainEvent @event) => new EventEnvelope
         {
             EventId = Guid.NewGuid().ToString(),
-            Event = @event.ToBsonDocument(),
+            Event = @event,
             Timestamp = new BsonTimestamp(0, 0),
             CorrelationId = TraceContext.Current.CorrelationId,
             CausationId = TraceContext.Current.CausationId
         };
-
-        public bool TryGetDomainEvent(out DomainEvent @event)
-        {
-            if (BsonSerializer.Deserialize<object>(Event) is DomainEvent domainEvent)
-            {
-                @event = domainEvent;
-                return true;
-            }
-
-            @event = null;
-            return false;
-        }
     }
 }

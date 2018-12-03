@@ -36,19 +36,8 @@ namespace Common
                     .Sort(Builders<EventEnvelope>.Sort.Ascending(envelope => envelope.Timestamp))
                     .ForEachAsync(async envelope =>
                     {
-                        try
-                        {
-                            if (envelope.TryGetDomainEvent(out var @event)) observable.Publish(@event);
-                        }
-                        catch (BsonSerializationException)
-                        {
-                            // Event that occured is not defined by any references dll, so skipping. 
-                        }
-
-                        checkpoint.Position = envelope.Timestamp;
-                        await checkpoints.UpdateOneAsync(
-                            c => c.Id == checkpoint.Id,
-                            Builders<Checkpoint>.Update.Set(c => c.Position, checkpoint.Position));
+                        observable.Publish(envelope.Event);
+                        await SaveCheckpoint(checkpoint, envelope.Timestamp);
                     }, cancellationToken);
 
                 await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
@@ -63,7 +52,7 @@ namespace Common
                     .Find(Builders<EventEnvelope>.Filter.Empty)
                     .Sort(Builders<EventEnvelope>.Sort.Descending(envelope => envelope.Timestamp))
                     .FirstOrDefaultAsync();
-                
+
                 var checkpoint = await checkpoints.Find(c => c.Name == name).FirstOrDefaultAsync(cancellationToken);
                 if (checkpoint is null)
                 {
@@ -79,8 +68,14 @@ namespace Common
                 Console.WriteLine(e);
                 throw;
             }
+        }
 
-            
+        private async Task SaveCheckpoint(Checkpoint checkpoint, BsonTimestamp position)
+        {
+            checkpoint.Position = position;
+            await checkpoints.UpdateOneAsync(
+                c => c.Id == checkpoint.Id,
+                Builders<Checkpoint>.Update.Set(c => c.Position, checkpoint.Position));
         }
     }
 }
