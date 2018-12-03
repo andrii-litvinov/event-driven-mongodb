@@ -16,7 +16,7 @@ namespace Orders
         {
             var order = new Order(command.OrderId);
 
-            order.Place(command.TotalAmount);
+            order.Place(command.Amount);
 
             await orders.Create(order);
         }

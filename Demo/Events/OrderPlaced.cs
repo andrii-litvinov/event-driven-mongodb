@@ -4,8 +4,8 @@ namespace Events
 {
     public class OrderPlaced : DomainEvent
     {
-        public OrderPlaced(string sourceId, decimal totalAmount) : base(sourceId) => TotalAmount = totalAmount;
+        public OrderPlaced(string sourceId, decimal amount) : base(sourceId) => Amount = amount;
 
-        public decimal TotalAmount { get; set; }
+        public decimal Amount { get; set; }
     }
 }

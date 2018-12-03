@@ -9,14 +9,14 @@ namespace Orders
         {
         }
 
-        public decimal TotalAmount { get; set; }
+        public decimal Amount { get; set; }
         public OrderStatus Status { get; set; }
 
-        public void Place(decimal totalAmount)
+        public void Place(decimal amount)
         {
-            TotalAmount = totalAmount;
+            Amount = amount;
             Status = OrderStatus.Pending;
-            RecordEvent(new OrderPlaced(Id, totalAmount));
+            RecordEvent(new OrderPlaced(Id, amount));
         }
 
         public void Fulfill()
