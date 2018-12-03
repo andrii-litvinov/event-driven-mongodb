@@ -55,7 +55,12 @@ namespace Common
                     {
                         if (envelope.TryGetDomainEvent(out var @event) &&
                             handlers.TryGetValue(@event.GetType().Name, out var handler))
+                        {
+                            if (!string.IsNullOrEmpty(envelope.CorrelationId))
+                                TraceContext.Set(envelope.CorrelationId, envelope.EventId);
+
                             await handler.Invoke(@event);
+                        }
 
                         checkpoint.Position = envelope.Timestamp;
                         await checkpoints.UpdateOneAsync(
