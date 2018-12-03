@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Serilog;
 
-namespace Common
+namespace Framework
 {
     public class LoggerEventHandlerDecorator<TEvent> : IEventHandler<TEvent>
     {

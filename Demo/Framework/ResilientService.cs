@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 using Serilog;
 
-namespace Common
+namespace Framework
 {
     public abstract class ResilientService : BackgroundService
     {

@@ -1,6 +1,6 @@
 ﻿using AutoFixture;
 using AutoFixture.Xunit2;
-using Common;
+using Framework;
 using MongoDB.Bson;
 
 namespace EventPublisher.Tests

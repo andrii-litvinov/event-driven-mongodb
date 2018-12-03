@@ -16,8 +16,8 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Commands\Commands.csproj" />
-        <ProjectReference Include="..\Common\Common.csproj" />
         <ProjectReference Include="..\Events\Events.csproj" />
+        <ProjectReference Include="..\Framework\Framework.csproj" />
     </ItemGroup>
 
     <ItemGroup>

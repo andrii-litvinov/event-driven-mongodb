@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace Common
+namespace Framework
 {
     public class TraceContext
     {

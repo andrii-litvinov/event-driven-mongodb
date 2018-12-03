@@ -1,7 +1,7 @@
 ﻿using System;
 using Events;
 
-namespace Common
+namespace Framework
 {
     public interface IEventObservable
     {

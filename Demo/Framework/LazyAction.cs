@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Common
+namespace Framework
 {
     public class LazyAction : Lazy<object>
     {

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Serilog;
 
-namespace Common.CommandHandling
+namespace Framework.CommandHandling
 {
     public class LoggerCommandHandlerDecorator<TCommand> : ICommandHandler<TCommand>
     {

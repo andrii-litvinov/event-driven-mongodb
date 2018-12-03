@@ -1,7 +1,7 @@
 ﻿using Serilog.Core;
 using Serilog.Events;
 
-namespace Common
+namespace Framework
 {
     public class TraceContextEnricher : ILogEventEnricher
     {

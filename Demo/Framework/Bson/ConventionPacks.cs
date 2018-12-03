@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Conventions;
 
-namespace Common
+namespace Framework
 {
     public static class ConventionPacks
     {

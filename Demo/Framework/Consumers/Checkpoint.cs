@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson;
 
-namespace Common
+namespace Framework
 {
     public class Checkpoint
     {

@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
-namespace Common
+namespace Framework
 {
     public class Trace
     {

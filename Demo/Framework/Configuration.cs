@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace Common
+namespace Framework
 {
     public static class Configuration
     {

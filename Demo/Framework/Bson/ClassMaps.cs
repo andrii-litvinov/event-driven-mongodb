@@ -11,7 +11,7 @@ using MongoDB.Bson.Serialization.Serializers;
 // ReSharper disable PossibleNullReferenceException
 // ReSharper disable AssignNullToNotNullAttribute
 
-namespace Common
+namespace Framework
 {
     public static class ClassMaps
     {

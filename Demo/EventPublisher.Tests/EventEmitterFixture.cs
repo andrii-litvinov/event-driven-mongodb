@@ -1,9 +1,8 @@
 using System.Threading.Tasks;
 using AutoFixture;
-using Common;
+using Framework;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
-using Orders;
 using Serilog;
 using SimpleInjector;
 

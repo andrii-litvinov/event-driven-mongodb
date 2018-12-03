@@ -5,7 +5,7 @@ using Events;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable ValueParameterNotUsed
 
-namespace Common
+namespace Framework
 {
     public abstract class Aggregate
     {

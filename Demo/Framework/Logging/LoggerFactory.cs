@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Core;
 
-namespace Common
+namespace Framework
 {
     public static class LoggerFactory
     {

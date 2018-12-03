@@ -4,7 +4,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Events;
 
-namespace Common
+namespace Framework
 {
     public static class EventObservableExtensions
     {

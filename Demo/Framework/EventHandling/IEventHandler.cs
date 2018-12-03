@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Common
+namespace Framework
 {
     public interface IEventHandler<TEvent>
     {

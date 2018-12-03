@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using EventPublisher.Tests;
 using FluentAssertions;
+using Framework;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Xunit;

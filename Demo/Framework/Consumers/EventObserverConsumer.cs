@@ -7,7 +7,7 @@ using Serilog;
 
 // ReSharper disable once MethodSupportsCancellation
 
-namespace Common
+namespace Framework
 {
     public class EventObserverConsumer : ResilientService
     {

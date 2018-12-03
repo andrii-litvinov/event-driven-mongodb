@@ -10,7 +10,7 @@ using Serilog;
 // ReSharper disable once PossibleInvalidCastExceptionInForeachLoop
 // ReSharper disable once MethodSupportsCancellation
 
-namespace Common
+namespace Framework
 {
     using Handlers = Dictionary<string, Func<DomainEvent, Task>>;
 

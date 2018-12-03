@@ -1,9 +1,8 @@
 ﻿using System;
 using Events;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
 
-namespace Common
+namespace Framework
 {
     public class EventEnvelope
     {

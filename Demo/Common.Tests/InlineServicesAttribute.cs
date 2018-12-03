@@ -2,6 +2,7 @@
 using AutoFixture.Xunit2;
 using Common;
 using Common.Tests;
+using Framework;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using SimpleInjector;

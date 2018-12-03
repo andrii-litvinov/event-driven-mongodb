@@ -1,5 +1,5 @@
 ﻿using System;
-using Common;
+using Framework;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using Serilog.AspNetCore;
 using SimpleInjector;
 using ILogger = Serilog.ILogger;
-using LoggerFactory = Common.LoggerFactory;
+using LoggerFactory = Framework.LoggerFactory;
 
 namespace Orders
 {
