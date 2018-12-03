@@ -1,8 +1,8 @@
-using Events;
+
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
-namespace EventPublisher.Tests
+namespace Events
 {
     public class NumberMultiplied : DomainEvent
     {
