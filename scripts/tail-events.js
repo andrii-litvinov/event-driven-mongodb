@@ -1,4 +1,4 @@
-(function tailEvents() {
+(function() {
     var event = db.events.find().sort({timestamp: -1}).limit(1).next();
     var ts = event.timestamp;
     for(;;) {
