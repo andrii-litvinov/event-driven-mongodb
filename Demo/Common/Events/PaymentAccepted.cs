@@ -2,8 +2,13 @@ namespace Common
 {
     public class PaymentAccepted : DomainEvent
     {
-        public PaymentAccepted(string sourceId, string orderId) : base(sourceId) => OrderId = orderId;
+        public PaymentAccepted(string sourceId, string orderId, decimal amount) : base(sourceId)
+        {
+            OrderId = orderId;
+            Amount = amount;
+        }
 
         public string OrderId { get; set; }
+        public decimal Amount { get; set; }
     }
 }

@@ -6,27 +6,33 @@ namespace Payments
 {
     public class Payment : Aggregate
     {
-        public Payment(string id, string orderId, decimal amount) : base(id)
-        {
-            OrderId = orderId;
-            Amount = amount;
-        }
+        public Payment(string id, string orderId) : base(id) => OrderId = orderId;
 
         public string OrderId { get; set; }
         public decimal Amount { get; set; }
-        public bool Accepted { get; set; }
-        public bool Rejected { get; set; }
+        public PaymentStatus Status { get; set; }
 
-        public void Accept()
+        public void Process(decimal amount)
         {
-            Accepted = true;
-            RecordEvent(new PaymentAccepted(Id, OrderId));
-        }
+            Amount = amount;
 
-        public void Reject()
-        {
-            Rejected = true;
-            RecordEvent(new PaymentRejected(Id, OrderId));
+            if (Amount >= 300)
+            {
+                Status = PaymentStatus.Rejected;
+                RecordEvent(new PaymentRejected(Id, OrderId, Amount));
+            }
+            else
+            {
+                Status = PaymentStatus.Accepted;
+                RecordEvent(new PaymentAccepted(Id, OrderId, Amount));
+            }
         }
+    }
+
+    public enum PaymentStatus
+    {
+        Pending,
+        Accepted,
+        Rejected
     }
 }

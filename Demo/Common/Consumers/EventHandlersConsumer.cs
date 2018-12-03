@@ -15,7 +15,7 @@ namespace Common
 
     public class EventHandlersConsumer : ResilientService
     {
-        private readonly FilterDefinitionBuilder<EventEnvelope> builder = Builders<EventEnvelope>.Filter;
+        private readonly FilterDefinitionBuilder<EventEnvelope> filter = Builders<EventEnvelope>.Filter;
         private readonly IMongoCollection<Checkpoint> checkpoints;
         private readonly IMongoCollection<EventEnvelope> events;
         private readonly Dictionary<string, Func<DomainEvent, Task>> handlers;
@@ -47,9 +47,9 @@ namespace Common
             while (!cancellationToken.IsCancellationRequested)
             {
                 await events
-                    .Find(builder.And(
-                        builder.In("event._t", handlers.Keys),
-                        builder.Gt(envelope => envelope.Timestamp, checkpoint.Position)))
+                    .Find(filter.And(
+                        filter.In("event._t", handlers.Keys),
+                        filter.Gt(envelope => envelope.Timestamp, checkpoint.Position)))
                     .Sort(Builders<EventEnvelope>.Sort.Ascending(envelope => envelope.Timestamp))
                     .ForEachAsync(async envelope =>
                     {

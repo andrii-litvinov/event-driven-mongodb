@@ -13,15 +13,14 @@ namespace Payments
 
         public async Task Handle(OrderPlaced @event)
         {
-            var payment = new Payment(ObjectId.GenerateNewId().ToString(), @event.SourceId, @event.TotalAmount);
+            if (@event.TotalAmount >= 200)
+            {
+                var delay = new Random().Next(1000, 1500);
+                await Task.Delay(delay);
+            }
 
-            var delay = new Random().Next(0, 1100);
-
-            if (delay % 2 == 0) payment.Accept();
-            else payment.Reject();
-
-            await Task.Delay(delay);
-
+            var payment = new Payment(ObjectId.GenerateNewId().ToString(), @event.SourceId);
+            payment.Process(@event.TotalAmount);
             await payments.Create(payment);
         }
     }
