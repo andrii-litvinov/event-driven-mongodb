@@ -5,8 +5,6 @@ services:
     image: mongo:4.0
     ports:
       - 27027:27017
-    volumes:
-      - ../mongo/dump:/dump
     command: --replSet xpdays-2018
     restart: always
   

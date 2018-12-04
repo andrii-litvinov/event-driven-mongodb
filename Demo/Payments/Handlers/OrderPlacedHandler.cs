@@ -16,7 +16,7 @@ namespace Payments
         {
             if (@event.Amount >= 200)
             {
-                var delay = new Random().Next(1000, 1500);
+                var delay = new Random().Next(3000, 30000);
                 await Task.Delay(delay);
             }
 

@@ -1,7 +1,13 @@
 Replication
-    https://www.kchodorow.com/blog/2010/10/12/replication-internals/
+    https://www.slideshare.net/Stripe_talks/mongo-db-oplog
+    https://www.compose.com/articles/the-mongodb-oplog-and-node-js/
     https://stackoverflow.com/questions/17878835/what-does-the-h-in-oplog-rs-document-stand-for
     https://stackoverflow.com/questions/26935419/what-do-the-oplog-fields-actually-mean
 
-Event-Driven
+Event-Driven-Architecture
     https://www.nginx.com/blog/event-driven-data-management-microservices/
+    https://microservices.io/
+    https://skillsmatter.com/skillscasts/12115-keynote-not-just-events-developing-asynchronous-microservices
+
+Domain model
+    http://dddcommunity.org/library/vernon_2011/
