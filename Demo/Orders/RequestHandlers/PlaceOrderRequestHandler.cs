@@ -34,9 +34,7 @@ namespace Orders
             response.Headers.Add("Location", $"{request.Scheme}://{request.Host}{request.Path}/{orderId}");
 
             var futureEvent = observable.FirstOfType<OrderFulfilled, OrderDiscarded>(orderId);
-
             var command = await request.Body.ReadAs<PlaceOrder>();
-            command.OrderId = orderId;
 
             await handler.Handle(command);
 
@@ -50,7 +48,8 @@ namespace Orders
                 response.StatusCode = (int) HttpStatusCode.Accepted;
             }
 
-            await response.Body.Write(await orders.Find(o => o.Id == orderId).FirstAsync());
+            var order = await orders.Find(o => o.Id == orderId).FirstAsync();
+            await response.Body.Write(order);
         }
     }
 }
