@@ -35,6 +35,7 @@ namespace Orders
 
             var futureEvent = observable.FirstOfType<OrderFulfilled, OrderDiscarded>(orderId);
             var command = await request.Body.ReadAs<PlaceOrder>();
+            command.OrderId = orderId;
 
             await handler.Handle(command);
 
